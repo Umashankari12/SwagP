@@ -26,6 +26,9 @@ jobs:
     - name: Verify Chrome Installation
       run: google-chrome --version
 
+    - name: Set Execution Permission for Selenium Manager
+      run: chmod +x ./bin/Debug/net6.0/selenium-manager/linux/selenium-manager || true
+
     - name: Restore dependencies
       run: dotnet restore
 
