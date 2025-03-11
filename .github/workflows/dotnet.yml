@@ -19,10 +19,10 @@ jobs:
       with:
         dotnet-version: 6.0.x
 
-    - name: Install Google Chrome
+    - name: Install Google Chrome & ChromeDriver
       run: |
         sudo apt-get update
-        sudo apt-get install -y google-chrome-stable
+        sudo apt-get install -y google-chrome-stable chromium-chromedriver
 
     - name: Verify Chrome Installation
       run: google-chrome --version
@@ -33,9 +33,15 @@ jobs:
     - name: Build the Project
       run: dotnet build --no-restore
 
-    - name: Set Execution Permission for Selenium Manager
+    - name: Fix Selenium Manager Permissions
       run: |
-        chmod +x $(find . -name "selenium-manager" | head -n 1) || true
+        SELENIUM_MANAGER=$(find . -name "selenium-manager" | head -n 1)
+        echo "Found Selenium Manager at: $SELENIUM_MANAGER"
+        chmod +x "$SELENIUM_MANAGER"
+        ls -l "$SELENIUM_MANAGER"
 
     - name: Run Tests
-      run: dotnet test --no-build --verbosity normal
+      run: |
+        SELENIUM_MANAGER=$(find . -name "selenium-manager" | head -n 1)
+        chmod +x "$SELENIUM_MANAGER"
+        dotnet test --no-build --verbosity normal
