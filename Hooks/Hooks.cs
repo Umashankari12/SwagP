@@ -153,7 +153,10 @@ namespace SwagProject.Hooks
             if (driver == null)
             {
                 //driver = new FirefoxDriver();
+                var options= new ChromeOptions();
+                options.AddArgument("--headless");
                 driver=new ChromeDriver();
+                
             }
 
             _scenarioContext["WebDriver"] = driver;
