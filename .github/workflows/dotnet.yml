@@ -23,43 +23,17 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y google-chrome-stable
 
+    - name: Verify Chrome Installation
+      run: google-chrome --version
+
+    - name: Set Execution Permission for Selenium Manager
+      run: chmod +x ./bin/Debug/net6.0/selenium-manager/linux/selenium-manager || true
+
     - name: Restore dependencies
       run: dotnet restore
 
     - name: Build
       run: dotnet build --no-restore
 
-    - name: Run Tests and Generate Report
-      run: dotnet test --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx"
-
-    - name: Convert TRX to HTML (optional)
-      run: |
-        mkdir -p TestResults
-        mv TestResults/test-results.trx TestResults/
-        curl -L -o trx2html.zip https://github.com/gfoidl/trx2html/releases/latest/download/trx2html.zip
-        unzip trx2html.zip
-        ./trx2html TestResults/test-results.trx -o TestResults/test-report.html
-
-    - name: Install mailsend-go
-      run: |
-        curl -LO https://github.com/muquit/mailsend-go/releases/latest/download/mailsend-go-linux-amd64
-        chmod +x mailsend-go-linux-amd64
-        sudo mv mailsend-go-linux-amd64 /usr/local/bin/mailsend-go
-
-    - name: Send Email with Report
-      env:
-        SMTP_SERVER: "smtp.gmail.com"
-        SMTP_PORT: "587"
-        EMAIL_FROM: "your-email@gmail.com"
-        EMAIL_TO: "recipient-email@example.com"
-        EMAIL_USER: "your-email@gmail.com"
-        EMAIL_PASS: "${{ secrets.EMAIL_PASS }}"  # Store password in GitHub Secrets
-      run: |
-        mailsend-go \
-          -smtp $SMTP_SERVER -port $SMTP_PORT \
-          -auth \
-          -user $EMAIL_USER -pass $EMAIL_PASS \
-          -from $EMAIL_FROM -to $EMAIL_TO \
-          -sub "Test Report - GitHub Actions" \
-          -mime-type "text/html" \
-          -attach "TestResults/test-report.html"
+    - name: Test
+      run: dotnet test --no-build --verbosity normal
