@@ -94,7 +94,6 @@
 //    }
 //}
 
-
 using NUnit.Framework;
 using OpenQA.Selenium.Firefox;
 using OpenQA.Selenium;
@@ -255,6 +254,49 @@ namespace SwagProject.Hooks
             {
                 TestContext.Progress.WriteLine($"Failed to capture screenshot: {ex.Message}");
                 return null;
+            }
+            private static void SendEmailWithGmail()
+        {
+            try
+            {
+                string smtpServer = "smtp.gmail.com";
+                int smtpPort = 587;
+                string senderEmail = "shankariu804@gmail.com"; // ✅ Replace with your Gmail address
+                string senderPassword = "exry tjbv yrxb ctnu"; // ✅ Use the App Password (16 characters)
+                string recipientEmail = "shankariu8@gmail.com";
+ 
+                MailMessage mail = new MailMessage
+                {
+                    From = new MailAddress(senderEmail),
+                    Subject = "SpecFlow Test Report & Screenshots",
+                    Body = "Attached are the Extent Report and failure screenshots from the latest test execution.",
+                    IsBodyHtml = false
+                };
+ 
+                mail.To.Add(recipientEmail);
+ 
+                // ✅ Attach Extent Report
+                if (File.Exists(reportPath))
+                    mail.Attachments.Add(new Attachment(reportPath));
+ 
+                // ✅ Attach Screenshots (if any)
+                foreach (string screenshot in Directory.GetFiles(screenshotsDir, "*.png"))
+                {
+                    mail.Attachments.Add(new Attachment(screenshot));
+                }
+ 
+                SmtpClient smtp = new SmtpClient(smtpServer, smtpPort)
+                {
+                    Credentials = new NetworkCredential(senderEmail, senderPassword),
+                    EnableSsl = true
+                };
+ 
+                smtp.Send(mail);
+                TestContext.Progress.WriteLine("✅ Email sent successfully via Gmail SMTP!");
+            }
+            catch (Exception ex)
+            {
+                TestContext.Progress.WriteLine($"❌ Failed to send email via Gmail SMTP: {ex.Message}");
             }
         }
     }
