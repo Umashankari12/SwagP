@@ -1,62 +1,51 @@
-name: CI/CD Pipeline - SwagProject
+name: .NET CI
 
 on:
   push:
     branches:
-      - main
+      - main  # Runs only on main branch
   pull_request:
     branches:
       - main
+    types:
+      - opened
+      - synchronize  # Runs for PRs, but prevents duplicate runs
+
+concurrency:
+  group: dotnet-build-${{ github.ref }}
+  cancel-in-progress: true  # Cancels previous workflow runs on the same branch
 
 jobs:
-  build-and-test:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 🛠️ Checkout Repository
+      - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: 🏗️ Setup .NET
+      - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '6.0.x'
+          dotnet-version: '6.0.x'  # Set your .NET version
 
-      - name: 🏎️ Install Chrome & ChromeDriver
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y google-chrome-stable
-          CHROME_VERSION=$(google-chrome --version | awk '{print $3}')
-          sudo apt-get install -y chromium-chromedriver
-          echo "✅ Chrome Installed: $(google-chrome --version)"
-          echo "✅ ChromeDriver Installed: $(chromedriver --version)"
-          sudo chmod +x /usr/bin/chromedriver
-
-      - name: 📦 Restore Dependencies
+      - name: Restore Dependencies
         run: dotnet restore
 
-      - name: 🔨 Build Project
-        run: dotnet build --no-restore --configuration Debug
+      - name: Build Project
+        run: dotnet build --no-restore
 
-      - name: 🧪 Run Tests with SpecFlow & NUnit
+      - name: Set Executable Permissions for Selenium Manager
+        run: chmod +x $(find . -name "selenium-manager" | head -n 1) || true
+
+      - name: Run Tests
         run: dotnet test --no-build --verbosity normal
+        env:
+          DOTNET_SYSTEM_GLOBALIZATION_INVARIANT: 1  # Fix for globalization errors in Linux
 
-      - name: 📤 Upload Test Results
+      - name: Upload Test Results (Optional)
+        if: always()  # Ensures upload even if tests fail
         uses: actions/upload-artifact@v3
         with:
-          name: TestResults
-          path: Reports/
-
-      - name: 📧 Send Email Notification (If Tests Fail)
-        if: failure()
-        uses: dawidd6/action-send-mail@v3
-        with:
-          server_address: smtp.gmail.com
-          server_port: 587
-          username: ${{ secrets.EMAIL_USERNAME }}
-          password: ${{ secrets.EMAIL_PASSWORD }}
-          from: "shankariu804@gmail.com"
-          to: "shankariu8@gmail.com"
-          subject: "❌ CI/CD Test Failed - SwagProject"
-          body: "Test execution failed! Please check the attached reports."
-          attachments: "Reports/ExtentReport.html"
+          name: test-results
+          path: TestResults/
 
