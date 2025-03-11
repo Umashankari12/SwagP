@@ -1,40 +1,62 @@
-name: Run Selenium Tests
+name: CI/CD Pipeline - SwagProject
 
 on:
   push:
     branches:
       - main
   pull_request:
+    branches:
+      - main
 
 jobs:
-  test:
+  build-and-test:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v3
+      - name: 🛠️ Checkout Repository
+        uses: actions/checkout@v4
 
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v3
-      with:
-        dotnet-version: 6.0.x  # Adjust based on your project
+      - name: 🏗️ Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '6.0.x'
 
-    - name: Install Chrome & ChromeDriver (Fallback)
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y google-chrome-stable chromium-chromedriver
+      - name: 🏎️ Install Chrome & ChromeDriver
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y google-chrome-stable
+          CHROME_VERSION=$(google-chrome --version | awk '{print $3}')
+          sudo apt-get install -y chromium-chromedriver
+          echo "✅ Chrome Installed: $(google-chrome --version)"
+          echo "✅ ChromeDriver Installed: $(chromedriver --version)"
+          sudo chmod +x /usr/bin/chromedriver
 
-    - name: Ensure Selenium Manager is Executable
-      run: |
-        SELENIUM_MANAGER=$(find . -name "selenium-manager" | head -n 1)
-        if [ -f "$SELENIUM_MANAGER" ]; then
-          echo "Selenium Manager found at: $SELENIUM_MANAGER"
-          chmod +x "$SELENIUM_MANAGER"
-          ls -l "$SELENIUM_MANAGER"
-        else
-          echo "Selenium Manager not found!"
-          exit 1
-        fi
+      - name: 📦 Restore Dependencies
+        run: dotnet restore
 
-    - name: Run Tests
-      run: dotnet test --no-build --verbosity normal
+      - name: 🔨 Build Project
+        run: dotnet build --no-restore --configuration Debug
+
+      - name: 🧪 Run Tests with SpecFlow & NUnit
+        run: dotnet test --no-build --verbosity normal
+
+      - name: 📤 Upload Test Results
+        uses: actions/upload-artifact@v3
+        with:
+          name: TestResults
+          path: Reports/
+
+      - name: 📧 Send Email Notification (If Tests Fail)
+        if: failure()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 587
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          from: "shankariu804@gmail.com"
+          to: "shankariu8@gmail.com"
+          subject: "❌ CI/CD Test Failed - SwagProject"
+          body: "Test execution failed! Please check the attached reports."
+          attachments: "Reports/ExtentReport.html"
+
