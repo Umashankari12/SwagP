@@ -33,5 +33,9 @@ jobs:
     - name: Build the Project
       run: dotnet build --no-restore
 
+    - name: Set Execution Permission for Selenium Manager
+      run: |
+        chmod +x $(find . -name "selenium-manager" | head -n 1) || true
+
     - name: Run Tests
       run: dotnet test --no-build --verbosity normal
