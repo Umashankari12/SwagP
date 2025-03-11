@@ -75,7 +75,7 @@ namespace SwagProject.Pages
         {
             driver.FindElement(check.checkOutFirstName).SendKeys(firstname);
             driver.FindElement(check.checkOutLastName).SendKeys(lastname);
-            driver.FindElement(check.checkOutPostalCode).SendKeys(zipcode);
+            // driver.FindElement(check.checkOutPostalCode).SendKeys(zipcode);
         }
         public void continued()
         {
