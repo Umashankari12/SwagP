@@ -1,47 +1,40 @@
-name: .NET
+name: Run Selenium Tests
 
 on:
   push:
-    branches: [ "master" ]
+    branches:
+      - main
   pull_request:
-    branches: [ "master" ]
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v4
+    - name: Checkout Code
+      uses: actions/checkout@v3
 
     - name: Setup .NET
-      uses: actions/setup-dotnet@v4
+      uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: 6.0.x
+        dotnet-version: 6.0.x  # Adjust based on your project
 
-    - name: Install Google Chrome & ChromeDriver
+    - name: Install Chrome & ChromeDriver (Fallback)
       run: |
         sudo apt-get update
         sudo apt-get install -y google-chrome-stable chromium-chromedriver
 
-    - name: Verify Chrome Installation
-      run: google-chrome --version
-
-    - name: Restore Dependencies
-      run: dotnet restore
-
-    - name: Build the Project
-      run: dotnet build --no-restore
-
-    - name: Fix Selenium Manager Permissions
+    - name: Ensure Selenium Manager is Executable
       run: |
         SELENIUM_MANAGER=$(find . -name "selenium-manager" | head -n 1)
-        echo "Found Selenium Manager at: $SELENIUM_MANAGER"
-        chmod +x "$SELENIUM_MANAGER"
-        ls -l "$SELENIUM_MANAGER"
+        if [ -f "$SELENIUM_MANAGER" ]; then
+          echo "Selenium Manager found at: $SELENIUM_MANAGER"
+          chmod +x "$SELENIUM_MANAGER"
+          ls -l "$SELENIUM_MANAGER"
+        else
+          echo "Selenium Manager not found!"
+          exit 1
+        fi
 
     - name: Run Tests
-      run: |
-        SELENIUM_MANAGER=$(find . -name "selenium-manager" | head -n 1)
-        chmod +x "$SELENIUM_MANAGER"
-        dotnet test --no-build --verbosity normal
+      run: dotnet test --no-build --verbosity normal
