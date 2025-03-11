@@ -95,19 +95,18 @@
 //}
 
 using NUnit.Framework;
-using OpenQA.Selenium.Firefox;
 using OpenQA.Selenium;
+using OpenQA.Selenium.Chrome;
 using TechTalk.SpecFlow;
-using WebDriverManager.DriverConfigs.Impl;
 using WebDriverManager;
-using AventStack.ExtentReports.Reporter;
+using WebDriverManager.DriverConfigs.Impl;
 using AventStack.ExtentReports;
+using AventStack.ExtentReports.Reporter;
 using System;
 using System.IO;
-using System.Threading;
-using OpenQA.Selenium.Chrome;
-using System.Net.Mail;
 using System.Net;
+using System.Net.Mail;
+using System.Threading;
 
 namespace SwagProject.Hooks
 {
@@ -135,7 +134,6 @@ namespace SwagProject.Hooks
             reportPath = Path.Combine(reportDirectory, "ExtentReport.html");
             screenshotsDir = Path.Combine(reportDirectory, "Screenshots");
 
-            // Ensure Reports Directory Exists
             Directory.CreateDirectory(reportDirectory);
             Directory.CreateDirectory(screenshotsDir);
 
@@ -158,16 +156,18 @@ namespace SwagProject.Hooks
             if (driver == null)
             {
                 ChromeOptions options = new ChromeOptions();
-
-                // Specify the Chrome binary path (for CI environments)
-                options.BinaryLocation = "/usr/bin/google-chrome";
-
-                // Run Chrome in headless mode (CI/CD friendly)
+                
+                // Explicitly set Chrome binary path for Linux CI
+                options.BinaryLocation = "/usr/bin/google-chrome"; 
+                
+                // Set necessary Chrome options for CI/CD
                 options.AddArgument("--headless");
                 options.AddArgument("--no-sandbox");
                 options.AddArgument("--disable-dev-shm-usage");
 
-                driver = new ChromeDriver(options);
+                // Ensure ChromeDriver has execution permissions
+                string driverPath = "/usr/local/bin/";
+                driver = new ChromeDriver(driverPath, options);
             }
 
             _scenarioContext["WebDriver"] = driver;
@@ -182,28 +182,13 @@ namespace SwagProject.Hooks
 
             if (_scenarioContext.TestError == null)
             {
-                if (screenshotPath != null)
-                {
-                    _scenario.Log(Status.Pass, stepText,
-                        MediaEntityBuilder.CreateScreenCaptureFromPath(screenshotPath).Build());
-                }
-                else
-                {
-                    _scenario.Log(Status.Pass, stepText);
-                }
+                _scenario.Log(Status.Pass, stepText,
+                    MediaEntityBuilder.CreateScreenCaptureFromPath(screenshotPath).Build());
             }
             else
             {
-                if (screenshotPath != null)
-                {
-                    _scenario.Log(Status.Fail, stepText,
-                        MediaEntityBuilder.CreateScreenCaptureFromPath(screenshotPath).Build());
-                }
-                else
-                {
-                    _scenario.Log(Status.Fail, stepText);
-                }
-
+                _scenario.Log(Status.Fail, stepText,
+                    MediaEntityBuilder.CreateScreenCaptureFromPath(screenshotPath).Build());
                 _scenario.Log(Status.Fail, _scenarioContext.TestError.Message);
             }
         }
@@ -222,7 +207,7 @@ namespace SwagProject.Hooks
         public static void AfterTestRun()
         {
             _extent.Flush();
-            SendEmailWithGmail();  // ✅ Send report email after test execution
+            SendEmailWithGmail();  
         }
 
         private string CaptureScreenshot(string scenarioName, string stepName)
@@ -235,18 +220,15 @@ namespace SwagProject.Hooks
                     return null;
                 }
 
-                Thread.Sleep(500);  // Small Wait Before Capturing Screenshot
+                Thread.Sleep(500);
                 Screenshot screenshot = ((ITakesScreenshot)driver).GetScreenshot();
 
-                // Generate a Safe Filename
                 string sanitizedStepName = string.Join("_", stepName.Split(Path.GetInvalidFileNameChars()));
                 string fileName = $"{scenarioName}_{sanitizedStepName}.png";
                 string filePath = Path.Combine(screenshotsDir, fileName);
 
                 screenshot.SaveAsFile(filePath);
-                TestContext.Progress.WriteLine($"Screenshot saved: {filePath}");
-
-                return Path.Combine("Screenshots", fileName);  // Return Relative Path for Extent Report
+                return Path.Combine("Screenshots", fileName);
             }
             catch (Exception ex)
             {
@@ -261,8 +243,8 @@ namespace SwagProject.Hooks
             {
                 string smtpServer = "smtp.gmail.com";
                 int smtpPort = 587;
-                string senderEmail = "shankariu804@gmail.com"; // Replace with your Gmail address
-                string senderPassword = "exry tjbv yrxb ctnu"; // Use the App Password (16 characters)
+                string senderEmail = "shankariu804@gmail.com"; 
+                string senderPassword = "exry tjbv yrxb ctnu"; 
                 string recipientEmail = "shankariu8@gmail.com";
 
                 MailMessage mail = new MailMessage
@@ -275,11 +257,9 @@ namespace SwagProject.Hooks
 
                 mail.To.Add(recipientEmail);
 
-                // Attach Extent Report
                 if (File.Exists(reportPath))
                     mail.Attachments.Add(new Attachment(reportPath));
 
-                // Attach Screenshots (if any)
                 foreach (string screenshot in Directory.GetFiles(screenshotsDir, "*.png"))
                 {
                     mail.Attachments.Add(new Attachment(screenshot));
@@ -301,7 +281,6 @@ namespace SwagProject.Hooks
         }
     }
 }
-
 
 //[Binding]
 //public class Hooks
