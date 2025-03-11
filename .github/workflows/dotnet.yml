@@ -11,7 +11,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout Repository
+      uses: actions/checkout@v4
 
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
@@ -26,14 +27,11 @@ jobs:
     - name: Verify Chrome Installation
       run: google-chrome --version
 
-    - name: Set Execution Permission for Selenium Manager
-      run: chmod +x ./bin/Debug/net6.0/selenium-manager/linux/selenium-manager || true
-
-    - name: Restore dependencies
+    - name: Restore Dependencies
       run: dotnet restore
 
-    - name: Build
+    - name: Build the Project
       run: dotnet build --no-restore
 
-    - name: Test
+    - name: Run Tests
       run: dotnet test --no-build --verbosity normal
