@@ -155,19 +155,14 @@ namespace SwagProject.Hooks
                 //driver = new FirefoxDriver();
                 ChromeOptions options = new ChromeOptions();
 
-        // ✅ Run in headless mode (no GUI)
+        // ✅ Specify the Chrome binary path (for CI environments)
+        options.BinaryLocation = "/usr/bin/google-chrome";
+
+        // ✅ Run Chrome in headless mode (CI/CD friendly)
         options.AddArgument("--headless");
 
-        // ✅ Use a temporary user-data directory to avoid conflicts
-        options.AddArgument("--user-data-dir=/tmp/chrome-user-data");
-
-        // ✅ Disable GPU (useful in CI/CD)
-        options.AddArgument("--disable-gpu");
-
-        // ✅ No sandbox mode (needed for GitHub Actions)
+        // ✅ Other recommended arguments
         options.AddArgument("--no-sandbox");
-
-        // ✅ Disable dev/shm usage to prevent crashes in CI
         options.AddArgument("--disable-dev-shm-usage");
 
         driver = new ChromeDriver(options);
