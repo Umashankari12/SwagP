@@ -153,9 +153,24 @@ namespace SwagProject.Hooks
             if (driver == null)
             {
                 //driver = new FirefoxDriver();
-                var options= new ChromeOptions();
-                options.AddArgument("--headless");
-                driver=new ChromeDriver();
+                ChromeOptions options = new ChromeOptions();
+
+        // ✅ Run in headless mode (no GUI)
+        options.AddArgument("--headless");
+
+        // ✅ Use a temporary user-data directory to avoid conflicts
+        options.AddArgument("--user-data-dir=/tmp/chrome-user-data");
+
+        // ✅ Disable GPU (useful in CI/CD)
+        options.AddArgument("--disable-gpu");
+
+        // ✅ No sandbox mode (needed for GitHub Actions)
+        options.AddArgument("--no-sandbox");
+
+        // ✅ Disable dev/shm usage to prevent crashes in CI
+        options.AddArgument("--disable-dev-shm-usage");
+
+        driver = new ChromeDriver(options);
                 
             }
 
