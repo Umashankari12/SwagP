@@ -14,9 +14,9 @@ namespace SpecFlowProject1.Hooks
     [Binding]
     public class Hooks
     {
-        private IWebDriver driver;
+        private IWebDriver? driver;
         private readonly ScenarioContext _scenarioContext;
-        private string reportFilePath;
+        private string? reportFilePath;
         private List<string> screenshotPaths = new List<string>();
 
         public Hooks(ScenarioContext scenarioContext)
