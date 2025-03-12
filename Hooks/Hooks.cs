@@ -12,10 +12,9 @@ namespace SwagProject.Hooks
     [Binding]
     public class Hooks
     {
-        public IWebDriver? driver;
+        public static IWebDriver? driver; // Made public for accessibility
         private readonly ScenarioContext _scenarioContext;
-        private string? reportFilePath;
-        private List<string> screenshotPaths = new List<string>();
+        public List<string> screenshotPaths = new List<string>(); // Made public if needed
 
         public Hooks(ScenarioContext scenarioContext)
         {
@@ -33,9 +32,10 @@ namespace SwagProject.Hooks
                 options.AddArgument("--window-size=1920,1080");
                 driver = new ChromeDriver(options);
             }
+            _scenarioContext["WebDriver"] = driver; // Store driver in ScenarioContext for access
         }
 
-        public IWebDriver? GetDriver()
+        public static IWebDriver? GetDriver()
         {
             return driver;
         }
@@ -61,11 +61,10 @@ namespace SwagProject.Hooks
                 driver.Quit();
                 driver = null;
             }
-
             SendEmailReport();
         }
 
-        private void SendEmailReport()
+        public void SendEmailReport() // Made public for better accessibility
         {
             string senderEmail = "shankariu804@gmail.com";
             string senderPassword = "exry tjbv yrxb ctnu";
