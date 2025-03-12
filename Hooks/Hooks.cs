@@ -45,7 +45,7 @@ namespace SpecFlowProject1.Hooks
                 string screenshotDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Screenshots");
                 Directory.CreateDirectory(screenshotDirectory);
                 string screenshotFile = Path.Combine(screenshotDirectory, $"{_scenarioContext.ScenarioInfo.Title}_{DateTime.Now:yyyyMMddHHmmss}.png");
-                ((ITakesScreenshot)driver).GetScreenshot().SaveAsFile(screenshotFile, ScreenshotImageFormat.Png);
+                ((ITakesScreenshot)driver).GetScreenshot().SaveAsFile(screenshotFile);
                 screenshotPaths.Add(screenshotFile);
             }
         }
