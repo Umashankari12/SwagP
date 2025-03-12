@@ -3,7 +3,7 @@ name: .NET CI
 on:
   push:
     branches:
-      - master  # Runs only on main branch
+      - master  # Runs only on the master branch
   pull_request:
     branches:
       - master
@@ -44,8 +44,7 @@ jobs:
 
       - name: Upload Test Results (Optional)
         if: always()  # Ensures upload even if tests fail
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4  # Updated from v3 to v4
         with:
           name: test-results
           path: TestResults/
-
