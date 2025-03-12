@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest  # ✅ Runs on Windows
 
     steps:
       - name: Checkout Code
@@ -34,21 +34,26 @@ jobs:
       - name: Build Project
         run: dotnet build --no-restore
 
-      - name: Install Chrome & ChromeDriver  # ✅ Fix for missing ChromeDriver issue
+      - name: Install Chrome & ChromeDriver  # ✅ Windows installation
         run: |
-          sudo apt-get update
-          sudo apt-get install -y google-chrome-stable
-          sudo apt-get install -y chromium-chromedriver
-          sudo ln -s /usr/lib/chromium-browser/chromedriver /usr/local/bin/chromedriver
+          choco install googlechrome --ignore-checksums -y
+          choco install chromedriver --ignore-checksums -y
+        shell: powershell
+
+      - name: Verify Chrome & ChromeDriver Installation
+        run: |
+          google-chrome --version
+          chromedriver --version
+        shell: powershell
 
       - name: Run Tests
         run: dotnet test --no-build --verbosity normal
         env:
           DOTNET_SYSTEM_GLOBALIZATION_INVARIANT: 0  # ✅ Fix for globalization errors
 
-      - name: Upload Test Results (Optional)
+      - name: Upload Test Results
         if: always()
-        uses: actions/upload-artifact@v4  # ✅ Updated from v3 to v4
+        uses: actions/upload-artifact@v4
         with:
           name: test-results
-          path: TestResults/
+          path: bin/Debug/net6.0/Reports  # ✅ Adjusted path for Windows
