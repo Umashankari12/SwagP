@@ -9,7 +9,7 @@ using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using TechTalk.SpecFlow;
 
-namespace SpecFlowProject1.Hooks
+namespace SwagProject.Hooks
 {
     [Binding]
     public class Hooks
