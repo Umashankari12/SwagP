@@ -1,4 +1,110 @@
-using NUnit.Framework;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Net.Mail;
+using System.Reflection;
+using OpenQA.Selenium;
+using OpenQA.Selenium.Chrome;
+using TechTalk.SpecFlow;
+
+namespace SpecFlowProject1.Hooks
+{
+    [Binding]
+    public class Hooks
+    {
+        private IWebDriver driver;
+        private readonly ScenarioContext _scenarioContext;
+        private string reportFilePath;
+        private List<string> screenshotPaths = new List<string>();
+
+        public Hooks(ScenarioContext scenarioContext)
+        {
+            _scenarioContext = scenarioContext;
+        }
+
+        [BeforeScenario]
+        public void BeforeScenario()
+        {
+            if (driver == null)
+            {
+                ChromeOptions options = new ChromeOptions();
+                options.AddArgument("--headless");
+                options.AddArgument("--disable-gpu");
+                options.AddArgument("--window-size=1920,1080");
+                driver = new ChromeDriver(options);
+            }
+        }
+
+        [AfterStep]
+        public void TakeScreenshotAfterStep()
+        {
+            if (_scenarioContext.TestError != null)
+            {
+                string screenshotDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Screenshots");
+                Directory.CreateDirectory(screenshotDirectory);
+                string screenshotFile = Path.Combine(screenshotDirectory, $"{_scenarioContext.ScenarioInfo.Title}_{DateTime.Now:yyyyMMddHHmmss}.png");
+                ((ITakesScreenshot)driver).GetScreenshot().SaveAsFile(screenshotFile, ScreenshotImageFormat.Png);
+                screenshotPaths.Add(screenshotFile);
+            }
+        }
+
+        [AfterScenario]
+        public void AfterScenario()
+        {
+            if (driver != null)
+            {
+                driver.Quit();
+                driver = null;
+            }
+
+            SendEmailReport();
+        }
+
+        private void SendEmailReport()
+        {
+            string senderEmail = "shankariu804@gmail.com";
+            string senderPassword = "exry tjbv yrxb ctnu";
+            string receiverEmail = "shankariu8@gmail.com";
+            string smtpServer = "smtp.gmail.com";
+            int smtpPort = 587;
+
+            using (MailMessage mail = new MailMessage())
+            using (SmtpClient smtpClient = new SmtpClient(smtpServer, smtpPort))
+            {
+                mail.From = new MailAddress(senderEmail);
+                mail.To.Add(receiverEmail);
+                mail.Subject = "Test Execution Report";
+                mail.Body = "Please find the test execution report and screenshots attached.";
+
+                foreach (var screenshotPath in screenshotPaths)
+                {
+                    if (File.Exists(screenshotPath))
+                    {
+                        mail.Attachments.Add(new Attachment(screenshotPath));
+                    }
+                }
+
+                smtpClient.Credentials = new NetworkCredential(senderEmail, senderPassword);
+                smtpClient.EnableSsl = true;
+
+                try
+                {
+                    smtpClient.Send(mail);
+                    Console.WriteLine("Email sent successfully.");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Failed to send email: {ex.Message}");
+                }
+            }
+        }
+    }
+}
+
+
+/*using NUnit.Framework;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using TechTalk.SpecFlow;
@@ -193,6 +299,7 @@ namespace SwagProject.Hooks
         }
     }
 }
+*/
 
 
 /*using NUnit.Framework;
