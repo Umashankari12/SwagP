@@ -1,22 +1,15 @@
-name: .NET CI
+name: CI/CD for SwagProject
 
 on:
   push:
     branches:
-      - master
+      - main
   pull_request:
     branches:
-      - master
-    types:
-      - opened
-      - synchronize
-
-concurrency:
-  group: dotnet-build-${{ github.ref }}
-  cancel-in-progress: true
+      - main
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
 
     steps:
@@ -28,8 +21,15 @@ jobs:
         with:
           dotnet-version: '6.0.x'
 
-      - name: Install ICU (for Globalization Support)
-        run: sudo apt-get update && sudo apt-get install -y libicu-dev
+      - name: Install Chrome & ChromeDriver
+        run: |
+          sudo apt update
+          sudo apt install -y chromium-browser chromium-chromedriver
+          sudo ln -s /usr/lib/chromium-browser/chromedriver /usr/local/bin/chromedriver
+          chmod +x /usr/local/bin/chromedriver
+
+      - name: Set Globalization
+        run: echo "DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=0" >> $GITHUB_ENV
 
       - name: Restore Dependencies
         run: dotnet restore
@@ -40,11 +40,11 @@ jobs:
       - name: Run Tests
         run: dotnet test --no-build --verbosity normal
         env:
-          DOTNET_SYSTEM_GLOBALIZATION_INVARIANT: 0  # Enable full globalization support
+          DOTNET_SYSTEM_GLOBALIZATION_INVARIANT: 0  # Ensure culture support
 
       - name: Upload Test Results (Optional)
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
           name: test-results
           path: TestResults/
