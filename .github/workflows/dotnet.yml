@@ -3,17 +3,17 @@ name: .NET CI
 on:
   push:
     branches:
-      - master  # Runs only on the master branch
+      - master
   pull_request:
     branches:
       - master
     types:
       - opened
-      - synchronize  # Runs for PRs, but prevents duplicate runs
+      - synchronize
 
 concurrency:
   group: dotnet-build-${{ github.ref }}
-  cancel-in-progress: true  # Cancels previous workflow runs on the same branch
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -26,7 +26,10 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '6.0.x'  # Set your .NET version
+          dotnet-version: '6.0.x'
+
+      - name: Install ICU (for Globalization Support)
+        run: sudo apt-get update && sudo apt-get install -y libicu-dev
 
       - name: Restore Dependencies
         run: dotnet restore
@@ -34,17 +37,14 @@ jobs:
       - name: Build Project
         run: dotnet build --no-restore
 
-      - name: Set Executable Permissions for Selenium Manager
-        run: chmod +x $(find . -name "selenium-manager" | head -n 1) || true
-
       - name: Run Tests
         run: dotnet test --no-build --verbosity normal
         env:
-          DOTNET_SYSTEM_GLOBALIZATION_INVARIANT: 1  # Fix for globalization errors in Linux
+          DOTNET_SYSTEM_GLOBALIZATION_INVARIANT: 0  # Enable full globalization support
 
       - name: Upload Test Results (Optional)
-        if: always()  # Ensures upload even if tests fail
-        uses: actions/upload-artifact@v4  # Updated from v3 to v4
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
           name: test-results
           path: TestResults/
