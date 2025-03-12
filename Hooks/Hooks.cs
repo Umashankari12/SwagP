@@ -80,12 +80,20 @@ namespace SwagProject.Hooks
                 mail.Subject = "Test Execution Report";
                 mail.Body = "Please find the test execution report and screenshots attached.";
 
+                // Attach screenshots if any
                 foreach (var screenshotPath in screenshotPaths)
                 {
                     if (File.Exists(screenshotPath))
                     {
                         mail.Attachments.Add(new Attachment(screenshotPath));
                     }
+                }
+
+                // Attach the Extent Report (adjust the path as needed)
+                string extentReportPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ExtentReport.html");
+                if (File.Exists(extentReportPath))
+                {
+                    mail.Attachments.Add(new Attachment(extentReportPath));
                 }
 
                 smtpClient.Credentials = new NetworkCredential(senderEmail, senderPassword);
@@ -104,6 +112,114 @@ namespace SwagProject.Hooks
         }
     }
 }
+
+
+// using System;
+// using System.Collections.Generic;
+// using System.IO;
+// using System.Net;
+// using System.Net.Mail;
+// using OpenQA.Selenium;
+// using OpenQA.Selenium.Chrome;
+// using TechTalk.SpecFlow;
+
+// namespace SwagProject.Hooks
+// {
+//     [Binding]
+//     public class Hooks
+//     {
+//         public static IWebDriver? driver; // Made public for accessibility
+//         private readonly ScenarioContext _scenarioContext;
+//         public List<string> screenshotPaths = new List<string>(); // Made public if needed
+
+//         public Hooks(ScenarioContext scenarioContext)
+//         {
+//             _scenarioContext = scenarioContext;
+//         }
+
+//         [BeforeScenario]
+//         public void BeforeScenario()
+//         {
+//             if (driver == null)
+//             {
+//                 ChromeOptions options = new ChromeOptions();
+//                 options.AddArgument("--headless");
+//                 options.AddArgument("--disable-gpu");
+//                 options.AddArgument("--window-size=1920,1080");
+//                 driver = new ChromeDriver(options);
+//             }
+//             _scenarioContext["WebDriver"] = driver; // Store driver in ScenarioContext for access
+//         }
+
+//         public static IWebDriver? GetDriver()
+//         {
+//             return driver;
+//         }
+
+//         [AfterStep]
+//         public void TakeScreenshotAfterStep()
+//         {
+//             if (_scenarioContext.TestError != null && driver != null)
+//             {
+//                 string screenshotDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Screenshots");
+//                 Directory.CreateDirectory(screenshotDirectory);
+//                 string screenshotFile = Path.Combine(screenshotDirectory, $"{_scenarioContext.ScenarioInfo.Title}_{DateTime.Now:yyyyMMddHHmmss}.png");
+//                 ((ITakesScreenshot)driver).GetScreenshot().SaveAsFile(screenshotFile);
+//                 screenshotPaths.Add(screenshotFile);
+//             }
+//         }
+
+//         [AfterScenario]
+//         public void AfterScenario()
+//         {
+//             if (driver != null)
+//             {
+//                 driver.Quit();
+//                 driver = null;
+//             }
+//             SendEmailReport();
+//         }
+
+//         public void SendEmailReport() // Made public for better accessibility
+//         {
+//             string senderEmail = "shankariu804@gmail.com";
+//             string senderPassword = "exry tjbv yrxb ctnu";
+//             string receiverEmail = "shankariu8@gmail.com";
+//             string smtpServer = "smtp.gmail.com";
+//             int smtpPort = 587;
+
+//             using (MailMessage mail = new MailMessage())
+//             using (SmtpClient smtpClient = new SmtpClient(smtpServer, smtpPort))
+//             {
+//                 mail.From = new MailAddress(senderEmail);
+//                 mail.To.Add(receiverEmail);
+//                 mail.Subject = "Test Execution Report";
+//                 mail.Body = "Please find the test execution report and screenshots attached.";
+
+//                 foreach (var screenshotPath in screenshotPaths)
+//                 {
+//                     if (File.Exists(screenshotPath))
+//                     {
+//                         mail.Attachments.Add(new Attachment(screenshotPath));
+//                     }
+//                 }
+
+//                 smtpClient.Credentials = new NetworkCredential(senderEmail, senderPassword);
+//                 smtpClient.EnableSsl = true;
+
+//                 try
+//                 {
+//                     smtpClient.Send(mail);
+//                     Console.WriteLine("Email sent successfully.");
+//                 }
+//                 catch (Exception ex)
+//                 {
+//                     Console.WriteLine($"Failed to send email: {ex.Message}");
+//                 }
+//             }
+//         }
+//     }
+// }
 
 
 
