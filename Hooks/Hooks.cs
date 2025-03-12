@@ -4,6 +4,7 @@ using System.IO;
 using System.Net;
 using System.Net.Mail;
 using AventStack.ExtentReports;
+using AventStack.ExtentReports.Reporter;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using TechTalk.SpecFlow;
@@ -33,9 +34,9 @@ namespace SwagProject.Hooks
             if (_extentReports == null)
             {
                 var reportPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ExtentReport.html");
-                var extentHtmlReporter = new ExtentHtmlReporter(reportPath);
+                var extentSparkReporter = new ExtentSparkReporter(reportPath);
                 _extentReports = new ExtentReports();
-                _extentReports.AttachReporter(extentHtmlReporter);
+                _extentReports.AttachReporter(extentSparkReporter);
             }
 
             // Start a new test for each scenario
@@ -83,6 +84,9 @@ namespace SwagProject.Hooks
                 driver = null;
             }
 
+            // Save the ExtentReport
+            _extentReports?.Flush();
+
             // Generate and send email with the ExtentReport
             SendEmailReport();
         }
@@ -91,7 +95,7 @@ namespace SwagProject.Hooks
         {
             string senderEmail = "shankariu804@gmail.com";
             string senderPassword = "exry tjbv yrxb ctnu";
-            string receiverEmail = "shankariu8@gmail.com";
+            string receiverEmail = "shankaniu8@gmail.com";
             string smtpServer = "smtp.gmail.com";
             int smtpPort = 587;
 
