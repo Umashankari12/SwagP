@@ -1,5 +1,4 @@
 using System;
-using System.Threading;
 using OpenQA.Selenium;
 using SwagProject.Pages;
 using TechTalk.SpecFlow;
@@ -20,30 +19,30 @@ namespace SwagProject.StepDefinitions
             }
 
             driver = scenarioContext["WebDriver"] as IWebDriver;
-            over = new Overview(driver);  // ✅ Pass WebDriver to Overview class
+            over = new Overview(driver); // Pass driver to Overview class
         }
 
         [Given(@"User is on the Checkout Overview page")]
         public void GivenUserIsOnTheCheckoutOverviewPage()
         {
-            Console.WriteLine("✅ User is on the Checkout Overview page.");
+            Console.WriteLine("User is on Checkout Overview page");
         }
 
         [When(@"User clicks on Finish")]
         public void WhenUserClicksOnFinish()
         {
-            over.finish();  // ✅ Calls finish() method in Overview class
+            over.Finish(); // Call the method correctly
             Thread.Sleep(1000);
         }
 
         [Then(@"Order status should be visible")]
         public void ThenOrderStatusShouldBeVisible()
         {
-            Console.WriteLine("✅ Thank you for your order.");
-            Thread.Sleep(1000);
+            over.ConfirmationPage();
         }
     }
 }
+
 
 
 
