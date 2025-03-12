@@ -1,10 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Mail;
-using System.Reflection;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using TechTalk.SpecFlow;
@@ -14,7 +12,7 @@ namespace SwagProject.Hooks
     [Binding]
     public class Hooks
     {
-        public IWebDriver? driver;
+        private IWebDriver? driver;
         private readonly ScenarioContext _scenarioContext;
         private string? reportFilePath;
         private List<string> screenshotPaths = new List<string>();
@@ -37,10 +35,15 @@ namespace SwagProject.Hooks
             }
         }
 
+        public IWebDriver? GetDriver()
+        {
+            return driver;
+        }
+
         [AfterStep]
         public void TakeScreenshotAfterStep()
         {
-            if (_scenarioContext.TestError != null)
+            if (_scenarioContext.TestError != null && driver != null)
             {
                 string screenshotDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Screenshots");
                 Directory.CreateDirectory(screenshotDirectory);
@@ -102,6 +105,7 @@ namespace SwagProject.Hooks
         }
     }
 }
+
 
 
 /*using NUnit.Framework;
