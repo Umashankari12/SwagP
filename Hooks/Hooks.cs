@@ -93,7 +93,7 @@ namespace SwagProject.Hooks
 
         public void SendEmailReport()
         {
-            string senderEmail = "shankariu804@gmail.com";
+            string senderEmail = "shankaniu804@gmail.com";
             string senderPassword = "exry tjbv yrxb ctnu";
             string receiverEmail = "shankaniu8@gmail.com";
             string smtpServer = "smtp.gmail.com";
@@ -121,7 +121,7 @@ namespace SwagProject.Hooks
                     }
                 }
 
-                // Attach the Extent Report (adjust the path as needed)
+                // Attach the Extent Report
                 if (File.Exists(extentReportPath))
                 {
                     mail.Attachments.Add(new Attachment(extentReportPath));
@@ -143,7 +143,6 @@ namespace SwagProject.Hooks
         }
     }
 }
-
 
 
 // using System;
