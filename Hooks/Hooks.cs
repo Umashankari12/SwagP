@@ -94,9 +94,9 @@ namespace SwagProject.Hooks
 
         public void SendEmailReport()
         {
-            string senderEmail = "shankaniu804@gmail.com";
+            string senderEmail = "shankariu804@gmail.com";
             string senderPassword = "exry tjbv yrxb ctnu"; // Use App Password if 2FA is enabled.
-            string receiverEmail = "shankaniu8@gmail.com";
+            string receiverEmail = "shankariu8@gmail.com";
             string smtpServer = "smtp.gmail.com";
             int smtpPort = 587;
 
