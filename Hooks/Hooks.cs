@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Mail;
+using AventStack.ExtentReports;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using TechTalk.SpecFlow;
@@ -12,9 +13,13 @@ namespace SwagProject.Hooks
     [Binding]
     public class Hooks
     {
-        public static IWebDriver? driver; // Made public for accessibility
+        public static IWebDriver? driver;
         private readonly ScenarioContext _scenarioContext;
-        public List<string> screenshotPaths = new List<string>(); // Made public if needed
+        public List<string> screenshotPaths = new List<string>();
+
+        // ExtentReports setup
+        private static ExtentReports? _extentReports;
+        private static ExtentTest? _test;
 
         public Hooks(ScenarioContext scenarioContext)
         {
@@ -24,6 +29,18 @@ namespace SwagProject.Hooks
         [BeforeScenario]
         public void BeforeScenario()
         {
+            // Initialize ExtentReports
+            if (_extentReports == null)
+            {
+                var reportPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ExtentReport.html");
+                var extentHtmlReporter = new ExtentHtmlReporter(reportPath);
+                _extentReports = new ExtentReports();
+                _extentReports.AttachReporter(extentHtmlReporter);
+            }
+
+            // Start a new test for each scenario
+            _test = _extentReports.CreateTest(_scenarioContext.ScenarioInfo.Title);
+
             if (driver == null)
             {
                 ChromeOptions options = new ChromeOptions();
@@ -32,7 +49,8 @@ namespace SwagProject.Hooks
                 options.AddArgument("--window-size=1920,1080");
                 driver = new ChromeDriver(options);
             }
-            _scenarioContext["WebDriver"] = driver; // Store driver in ScenarioContext for access
+
+            _scenarioContext["WebDriver"] = driver;
         }
 
         public static IWebDriver? GetDriver()
@@ -50,6 +68,9 @@ namespace SwagProject.Hooks
                 string screenshotFile = Path.Combine(screenshotDirectory, $"{_scenarioContext.ScenarioInfo.Title}_{DateTime.Now:yyyyMMddHHmmss}.png");
                 ((ITakesScreenshot)driver).GetScreenshot().SaveAsFile(screenshotFile);
                 screenshotPaths.Add(screenshotFile);
+
+                // Add screenshot to the ExtentReport
+                _test?.AddScreenCaptureFromPath(screenshotFile);
             }
         }
 
@@ -61,16 +82,23 @@ namespace SwagProject.Hooks
                 driver.Quit();
                 driver = null;
             }
+
+            // Generate and send email with the ExtentReport
             SendEmailReport();
         }
 
-        public void SendEmailReport() // Made public for better accessibility
+        public void SendEmailReport()
         {
             string senderEmail = "shankariu804@gmail.com";
             string senderPassword = "exry tjbv yrxb ctnu";
             string receiverEmail = "shankariu8@gmail.com";
             string smtpServer = "smtp.gmail.com";
             int smtpPort = 587;
+
+            string extentReportPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ExtentReport.html");
+
+            // Save the ExtentReport
+            _extentReports?.Flush();
 
             using (MailMessage mail = new MailMessage())
             using (SmtpClient smtpClient = new SmtpClient(smtpServer, smtpPort))
@@ -90,7 +118,6 @@ namespace SwagProject.Hooks
                 }
 
                 // Attach the Extent Report (adjust the path as needed)
-                string extentReportPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ExtentReport.html");
                 if (File.Exists(extentReportPath))
                 {
                     mail.Attachments.Add(new Attachment(extentReportPath));
@@ -112,6 +139,7 @@ namespace SwagProject.Hooks
         }
     }
 }
+
 
 
 // using System;
