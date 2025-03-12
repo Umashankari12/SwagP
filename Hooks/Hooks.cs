@@ -12,7 +12,7 @@ namespace SwagProject.Hooks
     [Binding]
     public class Hooks
     {
-        private IWebDriver? driver;
+        public IWebDriver? driver;
         private readonly ScenarioContext _scenarioContext;
         private string? reportFilePath;
         private List<string> screenshotPaths = new List<string>();
