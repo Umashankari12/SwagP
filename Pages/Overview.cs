@@ -9,10 +9,9 @@ namespace SwagProject.Pages
     {
         private readonly IWebDriver driver;
 
-        // ✅ Constructor accepts WebDriver instance
-        public Overview(IWebDriver webDriver)
+        public Overview(IWebDriver driver)
         {
-            this.driver = webDriver;
+            this.driver = driver;
         }
 
         public void Finish()
