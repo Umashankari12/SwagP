@@ -1,46 +1,7 @@
-﻿//using OpenQA.Selenium;
-
-//namespace SwagProject.Pages
-//{
-//    internal class AddToCart
-//    {
-//        private readonly IWebDriver driver;
-
-//        public AddToCart(IWebDriver driver)
-//        {
-//            this.driver = driver;
-//        }
-
-//        // Locators
-//        private readonly By product = By.XPath("//img[@alt='Sauce Labs Backpack']");
-//        private readonly By addToCartBtn = By.XPath("//button[contains(@id, 'add-to-cart')]");
-//        private readonly By cartIcon = By.XPath("//a[@class='shopping_cart_link']");
-
-//        public AddToCart SelectProduct()
-//        {
-//            driver.FindElement(product).Click();
-//            return this;
-//        }
-
-//        public AddToCart ClickAddToCart()
-//        {
-//            driver.FindElement(addToCartBtn).Click();
-//            return this;
-//        }
-
-//        public Checkout ClickCartIcon()
-//        {
-//            driver.FindElement(cartIcon).Click();
-//            return new Checkout(driver);
-//        }
-//    }
-//}
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Threading;
 using OpenQA.Selenium;
+using SeleniumExtras.WaitHelpers;
 using SwagProject.Locators;
 
 namespace SwagProject.Pages
@@ -49,33 +10,76 @@ namespace SwagProject.Pages
     {
         IWebDriver driver = SwagProject.Hooks.Hooks.driver;
 
-        /*public AddToCart(IWebDriver driver)
-        {
-
-            this.driver = driver;
-        }*/
-        //locators on addtocart page
-
-        //By clickproduct = By.XPath("//img[@alt='Sauce Labs Backpack']");
-        //By addtocartbtn = By.XPath("//button[contains(@id, 'add-to-cart')]");
-
-        //By carticon = By.XPath("//a[@class='shopping_cart_link']");
-
+        // Method to click on the product image (or link)
         public void productclick()
         {
-            driver.FindElement(Addcart.clickproduct).Click();
-            Thread.Sleep(2000);
+            // Wait for the product to be clickable and then click it
+            WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
+            var product = wait.Until(ExpectedConditions.ElementToBeClickable(Addcart.clickproduct));
 
+            // Scroll the product into view
+            ((IJavaScriptExecutor)driver).ExecuteScript("arguments[0].scrollIntoView(true);", product);
+
+            // Click the product
+            product.Click();
+            Thread.Sleep(2000); // Optional: Consider replacing Thread.Sleep with explicit waits
         }
+
+        // Method to click on the Add to Cart button
         public void AddCart()
         {
-            driver.FindElement(Addcart.addtocartbtn).Click();
-            Thread.Sleep(2000);
+            // Wait for the Add to Cart button to be clickable
+            WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
+            var addToCartButton = wait.Until(ExpectedConditions.ElementToBeClickable(Addcart.addtocartbtn));
+
+            // Click the Add to Cart button
+            addToCartButton.Click();
+            Thread.Sleep(2000); // Optional: Consider replacing Thread.Sleep with explicit waits
         }
+
+        // Method to click on the Cart icon
         public void CartIcon()
         {
-            driver.FindElement(Addcart.carticon).Click();
-            Thread.Sleep(1000);
+            // Wait for the Cart icon to be clickable
+            WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
+            var cartIcon = wait.Until(ExpectedConditions.ElementToBeClickable(Addcart.carticon));
+
+            // Click the Cart icon
+            cartIcon.Click();
+            Thread.Sleep(1000); // Optional: Consider replacing Thread.Sleep with explicit waits
         }
     }
 }
+
+// using System;
+// using System.Collections.Generic;
+// using System.Linq;
+// using System.Text;
+// using System.Threading.Tasks;
+// using OpenQA.Selenium;
+// using SwagProject.Locators;
+
+// namespace SwagProject.Pages
+// {
+//     internal class AddToCart
+//     {
+//         IWebDriver driver = SwagProject.Hooks.Hooks.driver;
+
+//         public void productclick()
+//         {
+//             driver.FindElement(Addcart.clickproduct).Click();
+//             Thread.Sleep(2000);
+
+//         }
+//         public void AddCart()
+//         {
+//             driver.FindElement(Addcart.addtocartbtn).Click();
+//             Thread.Sleep(2000);
+//         }
+//         public void CartIcon()
+//         {
+//             driver.FindElement(Addcart.carticon).Click();
+//             Thread.Sleep(1000);
+//         }
+//     }
+// }
