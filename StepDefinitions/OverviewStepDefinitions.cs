@@ -44,9 +44,17 @@ namespace SwagProject.StepDefinitions
         [When(@"User clicks on Finish")]
         public void WhenUserClicksOnFinish()
         {
-            over.finish();
+            driver.FindElement(By.XPath("//button[@id='finish']")).Click();
             Thread.Sleep(1000);
         }
+
+
+        // [When(@"User clicks on Finish")]
+        // public void WhenUserClicksOnFinish()
+        // {
+        //     over.finish();
+        //     Thread.Sleep(1000);
+        // }
 
         [Then(@"Order status should be visible")]
         public void ThenOrderStatusShouldBeVisible()
