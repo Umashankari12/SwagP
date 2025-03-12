@@ -38,12 +38,13 @@ jobs:
         run: |
           choco install googlechrome --ignore-checksums -y
           choco install chromedriver --ignore-checksums -y
+          echo "ChromeDriver installed"
         shell: powershell
 
       - name: Verify Chrome & ChromeDriver Installation
         run: |
-          google-chrome --version
-          chromedriver --version
+          Get-Command "C:\Program Files\Google\Chrome\Application\chrome.exe"
+          Get-Command chromedriver
         shell: powershell
 
       - name: Run Tests
