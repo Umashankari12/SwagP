@@ -3,10 +3,10 @@ name: .NET CI
 on:
   push:
     branches:
-      - main  # Runs only on main branch
+      - master  # Runs only on main branch
   pull_request:
     branches:
-      - main
+      - master
     types:
       - opened
       - synchronize  # Runs for PRs, but prevents duplicate runs
