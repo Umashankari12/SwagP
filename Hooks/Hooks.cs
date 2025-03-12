@@ -92,54 +92,56 @@ namespace SwagProject.Hooks
         }
 
         public void SendEmailReport()
+{
+    string senderEmail = "shankaniu804@gmail.com";
+    string senderPassword = "exry tjbv yrxb ctnu";
+    string receiverEmail = "shankaniu8@gmail.com";
+    string smtpServer = "smtp.gmail.com";
+    int smtpPort = 587;
+
+    string extentReportPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ExtentReport.html");
+
+    // Save the ExtentReport
+    _extentReports?.Flush();
+
+    using (MailMessage mail = new MailMessage())
+    using (SmtpClient smtpClient = new SmtpClient(smtpServer, smtpPort))
+    {
+        mail.From = new MailAddress(senderEmail);
+        mail.To.Add(receiverEmail);
+        mail.Subject = "Test Execution Report";
+        mail.Body = "Please find the test execution report and screenshots attached.";
+
+        // Attach screenshots if any
+        foreach (var screenshotPath in screenshotPaths)
         {
-            string senderEmail = "shankaniu804@gmail.com";
-            string senderPassword = "exry tjbv yrxb ctnu";
-            string receiverEmail = "shankaniu8@gmail.com";
-            string smtpServer = "smtp.gmail.com";
-            int smtpPort = 587;
-
-            string extentReportPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ExtentReport.html");
-
-            // Save the ExtentReport
-            _extentReports?.Flush();
-
-            using (MailMessage mail = new MailMessage())
-            using (SmtpClient smtpClient = new SmtpClient(smtpServer, smtpPort))
+            if (File.Exists(screenshotPath))
             {
-                mail.From = new MailAddress(senderEmail);
-                mail.To.Add(receiverEmail);
-                mail.Subject = "Test Execution Report";
-                mail.Body = "Please find the test execution report and screenshots attached.";
-
-                // Attach screenshots if any
-                foreach (var screenshotPath in screenshotPaths)
-                {
-                    if (File.Exists(screenshotPath))
-                    {
-                        mail.Attachments.Add(new Attachment(screenshotPath));
-                    }
-                }
-
-                // Attach the Extent Report
-                if (File.Exists(extentReportPath))
-                {
-                    mail.Attachments.Add(new Attachment(extentReportPath));
-                }
-
-                smtpClient.Credentials = new NetworkCredential(senderEmail, senderPassword);
-                smtpClient.EnableSsl = true;
-
-                try
-                {
-                    smtpClient.Send(mail);
-                    Console.WriteLine("Email sent successfully.");
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Failed to send email: {ex.Message}");
-                }
+                mail.Attachments.Add(new Attachment(screenshotPath));
             }
+        }
+
+        // Attach the Extent Report
+        if (File.Exists(extentReportPath))
+        {
+            mail.Attachments.Add(new Attachment(extentReportPath));
+        }
+
+        smtpClient.Credentials = new NetworkCredential(senderEmail, senderPassword);
+        smtpClient.EnableSsl = true;
+
+        try
+        {
+            smtpClient.Send(mail);
+            Console.WriteLine("Email sent successfully.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to send email: {ex.Message}");
+            Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+        }
+    }
+}
         }
     }
 }
