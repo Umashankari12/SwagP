@@ -7,6 +7,7 @@ using AventStack.ExtentReports;
 using AventStack.ExtentReports.Reporter;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
+using OpenQA.Selenium.Support.UI;
 using TechTalk.SpecFlow;
 
 namespace SwagProject.Hooks
@@ -94,7 +95,7 @@ namespace SwagProject.Hooks
         public void SendEmailReport()
         {
             string senderEmail = "shankaniu804@gmail.com";
-            string senderPassword = "exry tjbv yrxb ctnu";
+            string senderPassword = "exry tjbv yrxb ctnu"; // Use App Password if 2FA is enabled.
             string receiverEmail = "shankaniu8@gmail.com";
             string smtpServer = "smtp.gmail.com";
             int smtpPort = 587;
@@ -127,7 +128,7 @@ namespace SwagProject.Hooks
                     mail.Attachments.Add(new Attachment(extentReportPath));
                 }
 
-                smtpClient.Credentials = new NetworkCredential(senderEmail, senderPassword);
+                smtpClient.Credentials = new NetworkCredential(senderEmail, senderPassword); // Use App Password here if 2FA is enabled.
                 smtpClient.EnableSsl = true;
 
                 try
@@ -144,6 +145,7 @@ namespace SwagProject.Hooks
         }
     }
 }
+
 
 
 // using System;
