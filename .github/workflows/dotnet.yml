@@ -52,11 +52,9 @@ jobs:
         env:
           DOTNET_SYSTEM_GLOBALIZATION_INVARIANT: 0  # ✅ Fix for globalization errors
 
-      - name: Upload Test Results
+      - name: Upload ExtentReport
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: test-results
-          path: |
-            bin/Debug/net6.0/Reports  # Adjust if necessary
-            bin/Debug/net6.0/ExtentReport.html  # Add the Extent Report here
+          name: extent-report
+          path: bin/Debug/net6.0/ExtentReport.html
