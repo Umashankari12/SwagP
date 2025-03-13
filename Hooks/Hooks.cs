@@ -187,7 +187,6 @@ using System.IO;
 using System.Net;
 using System.Net.Mail;
 using AventStack.ExtentReports;
-using AventStack.ExtentReports.MarkupUtils;
 using AventStack.ExtentReports.Reporter;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
@@ -217,7 +216,6 @@ namespace SwagProject.Hooks
             {
                 string reportDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "TestResults");
                 Directory.CreateDirectory(reportDirectory);
-                
                 reportPath = Path.Combine(reportDirectory, "ExtentReport.html");
                 var extentSparkReporter = new ExtentSparkReporter(reportPath);
                 _extentReports = new ExtentReports();
@@ -244,82 +242,51 @@ namespace SwagProject.Hooks
         }
 
         [AfterStep]
-public void InsertReportingSteps()
-{
-    string stepText = _scenarioContext.StepContext.StepInfo.Text;
-
-    if (_test == null) return;
-
-    if (_scenarioContext.TestError != null)
-    {
-        string screenshotPath = CaptureScreenshotFile();
-        if (!string.IsNullOrEmpty(screenshotPath))
+        public void InsertReportingSteps()
         {
-            string relativeScreenshotPath = "Screenshots/" + Path.GetFileName(screenshotPath); // ✅ Relative Path
-            _test.Log(Status.Fail, stepText)
-                 .AddScreenCaptureFromPath(relativeScreenshotPath); // ✅ Now embedded in Extent Report
-            screenshotPaths.Add(screenshotPath);
-        }
-        else
-        {
-            _test.Log(Status.Fail, stepText);
-        }
-        _test.Log(Status.Fail, _scenarioContext.TestError.Message);
-    }
-    else
-    {
-        _test.Log(Status.Pass, stepText);
-    }
-}
+            string stepText = _scenarioContext.StepContext.StepInfo.Text;
 
+            if (_test == null) return;
 
-private string CaptureScreenshotFile()
-{
-    try
-    {
-        if (driver == null || driver.WindowHandles.Count == 0)
-        {
-            Console.WriteLine("No active browser window. Skipping screenshot.");
-            return null;
+            if (_scenarioContext.TestError != null)
+            {
+                string screenshotBase64 = CaptureScreenshotBase64(); // ✅ Capture Base64 screenshot
+                if (!string.IsNullOrEmpty(screenshotBase64))
+                {
+                    string imgTag = $"<img src='data:image/png;base64,{screenshotBase64}' width='600px' />";
+                    _test.Log(Status.Fail, stepText + "<br>" + imgTag); // ✅ Embed in Extent Report
+                }
+                else
+                {
+                    _test.Log(Status.Fail, stepText);
+                }
+                _test.Log(Status.Fail, _scenarioContext.TestError.Message);
+            }
+            else
+            {
+                _test.Log(Status.Pass, stepText);
+            }
         }
 
-        // ✅ Save screenshots in a "Screenshots" folder
-        string screenshotDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Screenshots");
-        Directory.CreateDirectory(screenshotDirectory);
+        private string CaptureScreenshotBase64()
+        {
+            try
+            {
+                if (driver == null || driver.WindowHandles.Count == 0)
+                {
+                    Console.WriteLine("No active browser window. Skipping screenshot.");
+                    return null;
+                }
 
-        // ✅ Unique screenshot name
-        string screenshotPath = Path.Combine(screenshotDirectory, $"{_scenarioContext.ScenarioInfo.Title}_{DateTime.Now:yyyyMMddHHmmss}.png");
-        Screenshot screenshot = ((ITakesScreenshot)driver).GetScreenshot();
-        screenshot.SaveAsFile(screenshotPath, ScreenshotImageFormat.Png);
-
-        return screenshotPath; // ✅ Return path for embedding in report
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Failed to capture screenshot: {ex.Message}");
-        return null;
-    }
-}
-
-        // private string CaptureScreenshotBase64()
-        // {
-        //     try
-        //     {
-        //         if (driver == null || driver.WindowHandles.Count == 0)
-        //         {
-        //             Console.WriteLine("No active browser window. Skipping screenshot.");
-        //             return null;
-        //         }
-
-        //         Screenshot screenshot = ((ITakesScreenshot)driver).GetScreenshot();
-        //         return screenshot.AsBase64EncodedString;
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         Console.WriteLine($"Failed to capture screenshot: {ex.Message}");
-        //         return null;
-        //     }
-        // }
+                Screenshot screenshot = ((ITakesScreenshot)driver).GetScreenshot();
+                return screenshot.AsBase64EncodedString; // ✅ Return Base64 string
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to capture screenshot: {ex.Message}");
+                return null;
+            }
+        }
 
         [AfterScenario]
         public void AfterScenario()
@@ -353,19 +320,11 @@ private string CaptureScreenshotFile()
                 mail.From = new MailAddress(senderEmail);
                 mail.To.Add(receiverEmail);
                 mail.Subject = "Test Execution Report";
-                mail.Body = "Please find the test execution report and screenshots attached.";
+                mail.Body = "Please find the test execution report attached.";
 
                 if (File.Exists(reportPath))
                 {
                     mail.Attachments.Add(new Attachment(reportPath));
-                }
-
-                foreach (var screenshotPath in screenshotPaths)
-                {
-                    if (File.Exists(screenshotPath))
-                    {
-                        mail.Attachments.Add(new Attachment(screenshotPath));
-                    }
                 }
 
                 smtpClient.Credentials = new NetworkCredential(senderEmail, senderPassword);
