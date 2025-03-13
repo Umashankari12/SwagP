@@ -181,7 +181,6 @@ namespace SwagProject.Hooks
 }
 */
 
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -202,12 +201,12 @@ namespace SwagProject.Hooks
         private readonly ScenarioContext _scenarioContext;
         private static ExtentReports? _extentReports;
         private static ExtentTest? _test;
-        private static string reportPath = string.Empty; // Prevents null error
+        private static string reportPath = string.Empty; // Initialize to avoid null errors
         private List<string> screenshotPaths = new List<string>();
 
         public Hooks(ScenarioContext scenarioContext)
         {
-            _scenarioContext = scenarioContext;
+            _scenarioContext = scenarioContext ?? throw new ArgumentNullException(nameof(scenarioContext));
         }
 
         [BeforeScenario]
@@ -285,7 +284,7 @@ namespace SwagProject.Hooks
                 string screenshotPath = Path.Combine(screenshotDirectory, screenshotFileName);
 
                 Screenshot screenshot = ((ITakesScreenshot)driver).GetScreenshot();
-                screenshot.SaveAsFile(screenshotPath, OpenQA.Selenium.ScreenshotImageFormat.Png);
+                screenshot.SaveAsFile(screenshotPath, ScreenshotImageFormat.Png);
 
                 screenshotPaths.Add(screenshotPath);
                 return screenshotPath;
@@ -363,6 +362,7 @@ namespace SwagProject.Hooks
         }
     }
 }
+
 
 
 
