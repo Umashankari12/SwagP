@@ -191,6 +191,7 @@ using AventStack.ExtentReports.Reporter;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using TechTalk.SpecFlow;
+using OpenQA.Selenium.ScreenshotImageFormat; // Add this directive
 
 namespace SwagProject.Hooks
 {
@@ -362,7 +363,6 @@ namespace SwagProject.Hooks
         }
     }
 }
-
 
 
 
