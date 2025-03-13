@@ -183,6 +183,7 @@ namespace SwagProject.Hooks
 
 using System;
 using System.Collections.Generic;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Net;
 using System.Net.Mail;
@@ -191,7 +192,6 @@ using AventStack.ExtentReports.Reporter;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using TechTalk.SpecFlow;
-using OpenQA.Selenium.ScreenshotImageFormat; // Add this directive
 
 namespace SwagProject.Hooks
 {
@@ -285,7 +285,7 @@ namespace SwagProject.Hooks
                 string screenshotPath = Path.Combine(screenshotDirectory, screenshotFileName);
 
                 Screenshot screenshot = ((ITakesScreenshot)driver).GetScreenshot();
-                screenshot.SaveAsFile(screenshotPath, ScreenshotImageFormat.Png);
+                screenshot.SaveAsFile(screenshotPath, ImageFormat.Png);
 
                 screenshotPaths.Add(screenshotPath);
                 return screenshotPath;
@@ -363,7 +363,6 @@ namespace SwagProject.Hooks
         }
     }
 }
-
 
 
 
