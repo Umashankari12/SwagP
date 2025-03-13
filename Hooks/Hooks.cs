@@ -4,6 +4,7 @@ using System.IO;
 using System.Net;
 using System.Net.Mail;
 using AventStack.ExtentReports;
+using AventStack.ExtentReports.MarkupUtils;
 using AventStack.ExtentReports.Reporter;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
@@ -69,20 +70,21 @@ namespace SwagProject.Hooks
             if (_scenarioContext.TestError != null)
             {
                 string screenshotBase64 = CaptureScreenshotBase64();
+                
+                // Highlight the failed step in the report
+                _test.Fail(MarkupHelper.CreateLabel("Step Failed: " + stepText, ExtentColor.Red));
+
+                // Attach screenshot if captured
                 if (!string.IsNullOrEmpty(screenshotBase64))
                 {
-                    _test.Log(Status.Fail, stepText)
-                         .AddScreenCaptureFromBase64String(screenshotBase64);
+                    _test.Fail("Screenshot: ", MediaEntityBuilder.CreateScreenCaptureFromBase64String(screenshotBase64).Build());
                 }
-                else
-                {
-                    _test.Log(Status.Fail, stepText);
-                }
-                _test.Log(Status.Fail, _scenarioContext.TestError.Message);
+                
+                _test.Fail(_scenarioContext.TestError.Message);
             }
             else
             {
-                _test.Log(Status.Pass, stepText);
+                _test.Pass(MarkupHelper.CreateLabel("Step Passed: " + stepText, ExtentColor.Green));
             }
         }
 
