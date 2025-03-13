@@ -86,6 +86,26 @@ namespace SwagProject.Hooks
             }
         }
 
+        private string CaptureScreenshotBase64()
+        {
+            try
+            {
+                if (driver == null || driver.WindowHandles.Count == 0)
+                {
+                    Console.WriteLine("No active browser window. Skipping screenshot.");
+                    return null;
+                }
+
+                Screenshot screenshot = ((ITakesScreenshot)driver).GetScreenshot();
+                return screenshot.AsBase64EncodedString;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to capture screenshot: {ex.Message}");
+                return null;
+            }
+        }
+
 
         private string CaptureScreenshotFile()
         {
