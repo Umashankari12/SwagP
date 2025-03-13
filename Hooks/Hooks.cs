@@ -187,6 +187,7 @@ using System.IO;
 using System.Net;
 using System.Net.Mail;
 using AventStack.ExtentReports;
+using AventStack.ExtentReports.MarkupUtils;
 using AventStack.ExtentReports.Reporter;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
@@ -216,7 +217,7 @@ namespace SwagProject.Hooks
             {
                 string reportDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "TestResults");
                 Directory.CreateDirectory(reportDirectory);
-
+                
                 reportPath = Path.Combine(reportDirectory, "ExtentReport.html");
                 var extentSparkReporter = new ExtentSparkReporter(reportPath);
                 _extentReports = new ExtentReports();
@@ -246,17 +247,16 @@ namespace SwagProject.Hooks
         public void InsertReportingSteps()
         {
             string stepText = _scenarioContext.StepContext.StepInfo.Text;
-
+        
             if (_test == null) return;
-
+        
             if (_scenarioContext.TestError != null)
             {
-                string screenshotPath = CaptureScreenshotFile();
-                if (!string.IsNullOrEmpty(screenshotPath))
+                string screenshotBase64 = CaptureScreenshotBase64();
+                if (!string.IsNullOrEmpty(screenshotBase64))
                 {
-                    _test.Log(Status.Fail, stepText)
-                         .AddScreenCaptureFromPath(screenshotPath); // ✅ Embeds image in report
-                    screenshotPaths.Add(screenshotPath);  // ✅ Saves path for email attachment
+                    string imgTag = $"<img src='data:image/png;base64,{screenshotBase64}' width='600px' />";
+                    _test.Log(Status.Fail, stepText + "<br>" + imgTag);
                 }
                 else
                 {
@@ -270,7 +270,8 @@ namespace SwagProject.Hooks
             }
         }
 
-        private string CaptureScreenshotFile()
+
+        private string CaptureScreenshotBase64()
         {
             try
             {
@@ -280,14 +281,8 @@ namespace SwagProject.Hooks
                     return null;
                 }
 
-                string screenshotDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Screenshots");
-                Directory.CreateDirectory(screenshotDirectory);
-
-                string screenshotPath = Path.Combine(screenshotDirectory, $"{_scenarioContext.ScenarioInfo.Title}_{DateTime.Now:yyyyMMddHHmmss}.png");
                 Screenshot screenshot = ((ITakesScreenshot)driver).GetScreenshot();
-                screenshot.SaveAsFile(screenshotPath);
-
-                return screenshotPath;
+                return screenshot.AsBase64EncodedString;
             }
             catch (Exception ex)
             {
@@ -330,13 +325,11 @@ namespace SwagProject.Hooks
                 mail.Subject = "Test Execution Report";
                 mail.Body = "Please find the test execution report and screenshots attached.";
 
-                // Attach Extent Report
                 if (File.Exists(reportPath))
                 {
                     mail.Attachments.Add(new Attachment(reportPath));
                 }
 
-                // Attach failed test screenshots separately
                 foreach (var screenshotPath in screenshotPaths)
                 {
                     if (File.Exists(screenshotPath))
@@ -362,6 +355,7 @@ namespace SwagProject.Hooks
         }
     }
 }
+
 
 
 
