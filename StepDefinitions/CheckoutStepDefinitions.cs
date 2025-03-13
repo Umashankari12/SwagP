@@ -57,7 +57,7 @@ namespace SwagProject.StepDefinitions
             Thread.Sleep(1000);
         }
 
-        [Then(@"Then Clicks on Continue")]
+        [Then(@"Clicks on Continue")]
         public void ThenThenClicksOnContinue()
         {
             check.continued();
