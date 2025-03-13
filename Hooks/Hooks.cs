@@ -64,29 +64,29 @@ namespace SwagProject.Hooks
         public void InsertReportingSteps()
         {
             string stepText = _scenarioContext.StepContext.StepInfo.Text;
-
+        
             if (_test == null) return;
-
+        
             if (_scenarioContext.TestError != null)
             {
                 string screenshotBase64 = CaptureScreenshotBase64();
-                
-                // Highlight the failed step in the report
-                _test.Fail(MarkupHelper.CreateLabel("Step Failed: " + stepText, ExtentColor.Red));
-
-                // Attach screenshot if captured
                 if (!string.IsNullOrEmpty(screenshotBase64))
                 {
-                    _test.Fail("Screenshot: ", MediaEntityBuilder.CreateScreenCaptureFromBase64String(screenshotBase64).Build());
+                    string imgTag = $"<img src='data:image/png;base64,{screenshotBase64}' width='600px' />";
+                    _test.Log(Status.Fail, stepText + "<br>" + imgTag);
                 }
-                
-                _test.Fail(_scenarioContext.TestError.Message);
+                else
+                {
+                    _test.Log(Status.Fail, stepText);
+                }
+                _test.Log(Status.Fail, _scenarioContext.TestError.Message);
             }
             else
             {
-                _test.Pass(MarkupHelper.CreateLabel("Step Passed: " + stepText, ExtentColor.Green));
+                _test.Log(Status.Pass, stepText);
             }
         }
+
 
         private string CaptureScreenshotBase64()
         {
