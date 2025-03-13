@@ -63,15 +63,16 @@ namespace SwagProject.Hooks
         public void InsertReportingSteps()
         {
             string stepText = _scenarioContext.StepContext.StepInfo.Text;
+        
             if (_test == null) return;
-
+        
             if (_scenarioContext.TestError != null)
             {
-                string screenshotPath = CaptureScreenshotFile();
-                if (!string.IsNullOrEmpty(screenshotPath))
+                string screenshotBase64 = CaptureScreenshotBase64();
+                if (!string.IsNullOrEmpty(screenshotBase64))
                 {
-                    _test.Log(Status.Fail, stepText)
-                         .AddScreenCaptureFromPath(screenshotPath);
+                    string imgTag = $"<img src='data:image/png;base64,{screenshotBase64}' width='600px' />";
+                    _test.Log(Status.Fail, stepText + "<br>" + imgTag);
                 }
                 else
                 {
@@ -84,6 +85,7 @@ namespace SwagProject.Hooks
                 _test.Log(Status.Pass, stepText);
             }
         }
+
 
         private string CaptureScreenshotFile()
         {
