@@ -1,4 +1,4 @@
-using System;
+/*using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
@@ -179,6 +179,190 @@ namespace SwagProject.Hooks
         }
     }
 }
+*/
+
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Net;
+using System.Net.Mail;
+using AventStack.ExtentReports;
+using AventStack.ExtentReports.Reporter;
+using OpenQA.Selenium;
+using OpenQA.Selenium.Chrome;
+using TechTalk.SpecFlow;
+
+namespace SwagProject.Hooks
+{
+    [Binding]
+    public class Hooks
+    {
+        public static IWebDriver? driver;
+        private readonly ScenarioContext _scenarioContext;
+        private static ExtentReports? _extentReports;
+        private static ExtentTest? _test;
+        private static string reportPath;
+        public List<string> screenshotPaths = new List<string>();
+
+        public Hooks(ScenarioContext scenarioContext)
+        {
+            _scenarioContext = scenarioContext;
+        }
+
+        [BeforeScenario]
+        public void BeforeScenario()
+        {
+            if (_extentReports == null)
+            {
+                string reportDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "TestResults");
+                Directory.CreateDirectory(reportDirectory);
+
+                reportPath = Path.Combine(reportDirectory, "ExtentReport.html");
+                var extentSparkReporter = new ExtentSparkReporter(reportPath);
+                _extentReports = new ExtentReports();
+                _extentReports.AttachReporter(extentSparkReporter);
+            }
+
+            _test = _extentReports.CreateTest(_scenarioContext.ScenarioInfo.Title);
+
+            if (driver == null)
+            {
+                ChromeOptions options = new ChromeOptions();
+                options.AddArgument("--headless");
+                options.AddArgument("--disable-gpu");
+                options.AddArgument("--window-size=1920,1080");
+                driver = new ChromeDriver(options);
+            }
+
+            _scenarioContext["WebDriver"] = driver;
+        }
+
+        public static IWebDriver? GetDriver()
+        {
+            return driver;
+        }
+
+        [AfterStep]
+        public void InsertReportingSteps()
+        {
+            string stepText = _scenarioContext.StepContext.StepInfo.Text;
+
+            if (_test == null) return;
+
+            if (_scenarioContext.TestError != null)
+            {
+                string screenshotPath = CaptureScreenshotFile();
+                if (!string.IsNullOrEmpty(screenshotPath))
+                {
+                    _test.Log(Status.Fail, stepText)
+                         .AddScreenCaptureFromPath(screenshotPath); // ✅ Embeds image in report
+                    screenshotPaths.Add(screenshotPath);  // ✅ Saves path for email attachment
+                }
+                else
+                {
+                    _test.Log(Status.Fail, stepText);
+                }
+                _test.Log(Status.Fail, _scenarioContext.TestError.Message);
+            }
+            else
+            {
+                _test.Log(Status.Pass, stepText);
+            }
+        }
+
+        private string CaptureScreenshotFile()
+        {
+            try
+            {
+                if (driver == null || driver.WindowHandles.Count == 0)
+                {
+                    Console.WriteLine("No active browser window. Skipping screenshot.");
+                    return null;
+                }
+
+                string screenshotDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Screenshots");
+                Directory.CreateDirectory(screenshotDirectory);
+
+                string screenshotPath = Path.Combine(screenshotDirectory, $"{_scenarioContext.ScenarioInfo.Title}_{DateTime.Now:yyyyMMddHHmmss}.png");
+                Screenshot screenshot = ((ITakesScreenshot)driver).GetScreenshot();
+                screenshot.SaveAsFile(screenshotPath);
+
+                return screenshotPath;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to capture screenshot: {ex.Message}");
+                return null;
+            }
+        }
+
+        [AfterScenario]
+        public void AfterScenario()
+        {
+            if (driver != null)
+            {
+                driver.Quit();
+                driver = null;
+            }
+
+            _extentReports?.Flush();
+            SendEmailReport();
+        }
+
+        public void SendEmailReport()
+        {
+            string senderEmail = "shankariu804@gmail.com";
+            string senderPassword = "exry tjbv yrxb ctnu"; // Use App Password if 2FA is enabled.
+            string receiverEmail = "shankariu8@gmail.com";
+            string smtpServer = "smtp.gmail.com";
+            int smtpPort = 587;
+
+            if (_extentReports != null)
+            {
+                _extentReports.Flush();
+            }
+
+            using (MailMessage mail = new MailMessage())
+            using (SmtpClient smtpClient = new SmtpClient(smtpServer, smtpPort))
+            {
+                mail.From = new MailAddress(senderEmail);
+                mail.To.Add(receiverEmail);
+                mail.Subject = "Test Execution Report";
+                mail.Body = "Please find the test execution report and screenshots attached.";
+
+                // Attach Extent Report
+                if (File.Exists(reportPath))
+                {
+                    mail.Attachments.Add(new Attachment(reportPath));
+                }
+
+                // Attach failed test screenshots separately
+                foreach (var screenshotPath in screenshotPaths)
+                {
+                    if (File.Exists(screenshotPath))
+                    {
+                        mail.Attachments.Add(new Attachment(screenshotPath));
+                    }
+                }
+
+                smtpClient.Credentials = new NetworkCredential(senderEmail, senderPassword);
+                smtpClient.EnableSsl = true;
+
+                try
+                {
+                    smtpClient.Send(mail);
+                    Console.WriteLine("Email sent successfully.");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Failed to send email: {ex.Message}");
+                    Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+                }
+            }
+        }
+    }
+}
+
 
 
 
