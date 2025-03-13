@@ -34,18 +34,7 @@ jobs:
       - name: Build Project
         run: dotnet build --no-restore
 
-      - name: Install Chrome & ChromeDriver  # ✅ Windows installation
-        run: |
-          choco install googlechrome --ignore-checksums -y
-          choco install chromedriver --ignore-checksums -y
-          echo "ChromeDriver installed"
-        shell: powershell
-
-      - name: Verify Chrome & ChromeDriver Installation
-        run: |
-          Get-Command "C:\Program Files\Google\Chrome\Application\chrome.exe"
-          Get-Command chromedriver
-        shell: powershell
+     
 
       - name: Run Tests
         run: dotnet test --no-build --verbosity normal
