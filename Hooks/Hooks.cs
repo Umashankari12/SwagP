@@ -62,18 +62,53 @@ namespace SwagProject.Hooks
         }
 
         [AfterStep]
-        public void TakeScreenshotAfterStep()
+        public void InsertReportingSteps()
         {
-            if (_scenarioContext.TestError != null && driver != null)
-            {
-                string screenshotDirectory = Path.Combine(Directory.GetCurrentDirectory(), "Screenshots");
-                Directory.CreateDirectory(screenshotDirectory);
-                string screenshotFile = Path.Combine(screenshotDirectory, $"{_scenarioContext.ScenarioInfo.Title}_{DateTime.Now:yyyyMMddHHmmss}.png");
-                ((ITakesScreenshot)driver).GetScreenshot().SaveAsFile(screenshotFile);
-                screenshotPaths.Add(screenshotFile);
+            string stepText = _scenarioContext.StepContext.StepInfo.Text;
 
-                // Add screenshot to the ExtentReport
-                _test?.AddScreenCaptureFromPath(screenshotFile);
+            if (_test == null)
+                return;
+
+            if (_scenarioContext.TestError != null)
+            {
+                // Capture screenshot and convert to Base64 for embedding in the report
+                string screenshotBase64 = CaptureScreenshotBase64();
+
+                if (!string.IsNullOrEmpty(screenshotBase64))
+                {
+                    string imgTag = $"<img src='data:image/png;base64,{screenshotBase64}' width='600px' />";
+                    _test.Log(Status.Fail, $"{stepText}<br>{imgTag}");
+                }
+                else
+                {
+                    _test.Log(Status.Fail, stepText);
+                }
+
+                _test.Log(Status.Fail, _scenarioContext.TestError.Message);
+            }
+            else
+            {
+                _test.Log(Status.Pass, stepText);
+            }
+        }
+
+        private string CaptureScreenshotBase64()
+        {
+            try
+            {
+                if (driver == null || driver.WindowHandles.Count == 0)
+                {
+                    Console.WriteLine("No active browser window. Skipping screenshot.");
+                    return null;
+                }
+
+                Screenshot screenshot = ((ITakesScreenshot)driver).GetScreenshot();
+                return screenshot.AsBase64EncodedString;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to capture screenshot: {ex.Message}");
+                return null;
             }
         }
 
@@ -88,9 +123,6 @@ namespace SwagProject.Hooks
 
             // Ensure ExtentReport is flushed properly
             _extentReports?.Flush();
-
-            // Send the email with the report
-            SendEmailReport();
         }
 
         public void SendEmailReport()
@@ -147,6 +179,7 @@ namespace SwagProject.Hooks
         }
     }
 }
+
 
 
 
