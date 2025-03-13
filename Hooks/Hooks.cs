@@ -29,10 +29,9 @@ namespace SwagProject.Hooks
         [BeforeScenario]
         public void BeforeScenario()
         {
-            // Ensure ExtentReports is initialized once
             if (_extentReports == null)
             {
-                string reportDirectory = Path.Combine(Directory.GetCurrentDirectory(), "TestResults");
+                string reportDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "TestResults");
                 Directory.CreateDirectory(reportDirectory);
                 
                 reportPath = Path.Combine(reportDirectory, "ExtentReport.html");
@@ -41,7 +40,6 @@ namespace SwagProject.Hooks
                 _extentReports.AttachReporter(extentSparkReporter);
             }
 
-            // Start a new test for each scenario
             _test = _extentReports.CreateTest(_scenarioContext.ScenarioInfo.Title);
 
             if (driver == null)
@@ -66,24 +64,21 @@ namespace SwagProject.Hooks
         {
             string stepText = _scenarioContext.StepContext.StepInfo.Text;
 
-            if (_test == null)
-                return;
+            if (_test == null) return;
 
             if (_scenarioContext.TestError != null)
             {
-                // Capture screenshot and convert to Base64 for embedding in the report
-                string screenshotBase64 = CaptureScreenshotBase64();
-
-                if (!string.IsNullOrEmpty(screenshotBase64))
+                string screenshotFile = CaptureScreenshotFile();
+                if (screenshotFile != null)
                 {
-                    string imgTag = $"<img src='data:image/png;base64,{screenshotBase64}' width='600px' />";
-                    _test.Log(Status.Fail, $"{stepText}<br>{imgTag}");
+                    _test.Log(Status.Fail, stepText)
+                         .AddScreenCaptureFromPath(screenshotFile);
+                    screenshotPaths.Add(screenshotFile);
                 }
                 else
                 {
                     _test.Log(Status.Fail, stepText);
                 }
-
                 _test.Log(Status.Fail, _scenarioContext.TestError.Message);
             }
             else
@@ -92,7 +87,7 @@ namespace SwagProject.Hooks
             }
         }
 
-        private string CaptureScreenshotBase64()
+        private string CaptureScreenshotFile()
         {
             try
             {
@@ -102,8 +97,14 @@ namespace SwagProject.Hooks
                     return null;
                 }
 
+                string screenshotDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Screenshots");
+                Directory.CreateDirectory(screenshotDirectory);
+
+                string screenshotPath = Path.Combine(screenshotDirectory, $"{_scenarioContext.ScenarioInfo.Title}_{DateTime.Now:yyyyMMddHHmmss}.png");
                 Screenshot screenshot = ((ITakesScreenshot)driver).GetScreenshot();
-                return screenshot.AsBase64EncodedString;
+                screenshot.SaveAsFile(screenshotPath);
+
+                return screenshotPath;
             }
             catch (Exception ex)
             {
@@ -121,8 +122,9 @@ namespace SwagProject.Hooks
                 driver = null;
             }
 
-            // Ensure ExtentReport is flushed properly
             _extentReports?.Flush();
+
+            SendEmailReport();
         }
 
         public void SendEmailReport()
@@ -133,7 +135,6 @@ namespace SwagProject.Hooks
             string smtpServer = "smtp.gmail.com";
             int smtpPort = 587;
 
-            // Ensure Extent Report is written before attaching
             if (_extentReports != null)
             {
                 _extentReports.Flush();
@@ -147,19 +148,17 @@ namespace SwagProject.Hooks
                 mail.Subject = "Test Execution Report";
                 mail.Body = "Please find the test execution report and screenshots attached.";
 
-                // Attach screenshots if any
+                if (File.Exists(reportPath))
+                {
+                    mail.Attachments.Add(new Attachment(reportPath));
+                }
+
                 foreach (var screenshotPath in screenshotPaths)
                 {
                     if (File.Exists(screenshotPath))
                     {
                         mail.Attachments.Add(new Attachment(screenshotPath));
                     }
-                }
-
-                // Attach the Extent Report
-                if (File.Exists(reportPath))
-                {
-                    mail.Attachments.Add(new Attachment(reportPath));
                 }
 
                 smtpClient.Credentials = new NetworkCredential(senderEmail, senderPassword);
@@ -179,6 +178,7 @@ namespace SwagProject.Hooks
         }
     }
 }
+
 
 
 
