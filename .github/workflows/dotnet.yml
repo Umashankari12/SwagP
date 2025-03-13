@@ -57,4 +57,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: extent-report
-          path: TestResults/ExtentReport.html  # ✅ Correct path for report storage
+          #path: TestResults/ExtentReport.html  # ✅ Correct path for report storage
+          path: bin/Debug/net6.0/ExtentReport.html
