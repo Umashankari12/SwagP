@@ -273,26 +273,53 @@ public void InsertReportingSteps()
 }
 
 
-
-        private string CaptureScreenshotBase64()
+private string CaptureScreenshotFile()
+{
+    try
+    {
+        if (driver == null || driver.WindowHandles.Count == 0)
         {
-            try
-            {
-                if (driver == null || driver.WindowHandles.Count == 0)
-                {
-                    Console.WriteLine("No active browser window. Skipping screenshot.");
-                    return null;
-                }
-
-                Screenshot screenshot = ((ITakesScreenshot)driver).GetScreenshot();
-                return screenshot.AsBase64EncodedString;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Failed to capture screenshot: {ex.Message}");
-                return null;
-            }
+            Console.WriteLine("No active browser window. Skipping screenshot.");
+            return null;
         }
+
+        // ✅ Save screenshots in a "Screenshots" folder
+        string screenshotDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Screenshots");
+        Directory.CreateDirectory(screenshotDirectory);
+
+        // ✅ Unique screenshot name
+        string screenshotPath = Path.Combine(screenshotDirectory, $"{_scenarioContext.ScenarioInfo.Title}_{DateTime.Now:yyyyMMddHHmmss}.png");
+        Screenshot screenshot = ((ITakesScreenshot)driver).GetScreenshot();
+        screenshot.SaveAsFile(screenshotPath, ScreenshotImageFormat.Png);
+
+        return screenshotPath; // ✅ Return path for embedding in report
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Failed to capture screenshot: {ex.Message}");
+        return null;
+    }
+}
+
+        // private string CaptureScreenshotBase64()
+        // {
+        //     try
+        //     {
+        //         if (driver == null || driver.WindowHandles.Count == 0)
+        //         {
+        //             Console.WriteLine("No active browser window. Skipping screenshot.");
+        //             return null;
+        //         }
+
+        //         Screenshot screenshot = ((ITakesScreenshot)driver).GetScreenshot();
+        //         return screenshot.AsBase64EncodedString;
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         Console.WriteLine($"Failed to capture screenshot: {ex.Message}");
+        //         return null;
+        //     }
+        // }
 
         [AfterScenario]
         public void AfterScenario()
