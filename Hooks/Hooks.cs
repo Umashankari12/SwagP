@@ -102,7 +102,7 @@ namespace SwagProject.Hooks
                 string screenshotPath = Path.Combine(screenshotDirectory, screenshotFileName);
 
                 Screenshot screenshot = ((ITakesScreenshot)driver).GetScreenshot();
-                screenshot.SaveAsFile(screenshotPath, ScreenshotImageFormat.Png); // Correct method call
+                screenshot.SaveAsFile(ScreenshotImageFormat.Png); // Correct method call
 
                 screenshotPaths.Add(screenshotPath);
                 return screenshotPath;
