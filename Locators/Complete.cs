@@ -9,7 +9,7 @@ namespace SwagProject.Locators
 {
     internal class Complete
     {
-        public static By finishButton = By.XPath("//button[@id='finis']");
-        public static By confirmationMessage = By.XPath("//h2[normalize-space()='Thank you for your order!']");
+        public static By finishButton = By.XPath("//button[@id='finish']");
+        public static By confirmationMessage = By.XPath("//h2[normalize-space(='Thank you for your order!']");
     }
 }
