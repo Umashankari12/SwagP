@@ -244,31 +244,34 @@ namespace SwagProject.Hooks
         }
 
         [AfterStep]
-        public void InsertReportingSteps()
+public void InsertReportingSteps()
+{
+    string stepText = _scenarioContext.StepContext.StepInfo.Text;
+
+    if (_test == null) return;
+
+    if (_scenarioContext.TestError != null)
+    {
+        string screenshotPath = CaptureScreenshotFile();
+        if (!string.IsNullOrEmpty(screenshotPath))
         {
-            string stepText = _scenarioContext.StepContext.StepInfo.Text;
-        
-            if (_test == null) return;
-        
-            if (_scenarioContext.TestError != null)
-            {
-                string screenshotBase64 = CaptureScreenshotBase64();
-                if (!string.IsNullOrEmpty(screenshotBase64))
-                {
-                    string imgTag = $"<img src='data:image/png;base64,{screenshotBase64}' width='600px' />";
-                    _test.Log(Status.Fail, stepText + "<br>" + imgTag);
-                }
-                else
-                {
-                    _test.Log(Status.Fail, stepText);
-                }
-                _test.Log(Status.Fail, _scenarioContext.TestError.Message);
-            }
-            else
-            {
-                _test.Log(Status.Pass, stepText);
-            }
+            string relativeScreenshotPath = "Screenshots/" + Path.GetFileName(screenshotPath); // ✅ Relative Path
+            _test.Log(Status.Fail, stepText)
+                 .AddScreenCaptureFromPath(relativeScreenshotPath); // ✅ Now embedded in Extent Report
+            screenshotPaths.Add(screenshotPath);
         }
+        else
+        {
+            _test.Log(Status.Fail, stepText);
+        }
+        _test.Log(Status.Fail, _scenarioContext.TestError.Message);
+    }
+    else
+    {
+        _test.Log(Status.Pass, stepText);
+    }
+}
+
 
 
         private string CaptureScreenshotBase64()
