@@ -4,7 +4,6 @@ using System.IO;
 using System.Net;
 using System.Net.Mail;
 using AventStack.ExtentReports;
-using AventStack.ExtentReports.MarkupUtils;
 using AventStack.ExtentReports.Reporter;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
@@ -64,16 +63,17 @@ namespace SwagProject.Hooks
         public void InsertReportingSteps()
         {
             string stepText = _scenarioContext.StepContext.StepInfo.Text;
-        
+
             if (_test == null) return;
-        
+
             if (_scenarioContext.TestError != null)
             {
-                string screenshotBase64 = CaptureScreenshotBase64();
-                if (!string.IsNullOrEmpty(screenshotBase64))
+                string screenshotFile = CaptureScreenshotFile();
+                if (screenshotFile != null)
                 {
-                    string imgTag = $"<img src='data:image/png;base64,{screenshotBase64}' width='600px' />";
-                    _test.Log(Status.Fail, stepText + "<br>" + imgTag);
+                    _test.Log(Status.Fail, stepText)
+                         .AddScreenCaptureFromPath(screenshotFile);
+                    screenshotPaths.Add(screenshotFile); // Store screenshot paths for email
                 }
                 else
                 {
@@ -87,8 +87,7 @@ namespace SwagProject.Hooks
             }
         }
 
-
-        private string CaptureScreenshotBase64()
+        private string CaptureScreenshotFile()
         {
             try
             {
@@ -98,8 +97,14 @@ namespace SwagProject.Hooks
                     return null;
                 }
 
+                string screenshotDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Screenshots");
+                Directory.CreateDirectory(screenshotDirectory);
+
+                string screenshotPath = Path.Combine(screenshotDirectory, $"{_scenarioContext.ScenarioInfo.Title}_{DateTime.Now:yyyyMMddHHmmss}.png");
                 Screenshot screenshot = ((ITakesScreenshot)driver).GetScreenshot();
-                return screenshot.AsBase64EncodedString;
+                screenshot.SaveAsFile(screenshotPath);
+
+                return screenshotPath;
             }
             catch (Exception ex)
             {
@@ -140,13 +145,15 @@ namespace SwagProject.Hooks
                 mail.From = new MailAddress(senderEmail);
                 mail.To.Add(receiverEmail);
                 mail.Subject = "Test Execution Report";
-                mail.Body = "Please find the test execution report and screenshots attached.";
+                mail.Body = "Please find the test execution report and failed test case screenshots attached.";
 
+                // Attach Extent Report
                 if (File.Exists(reportPath))
                 {
                     mail.Attachments.Add(new Attachment(reportPath));
                 }
 
+                // Attach each failed test case screenshot separately
                 foreach (var screenshotPath in screenshotPaths)
                 {
                     if (File.Exists(screenshotPath))
@@ -172,6 +179,7 @@ namespace SwagProject.Hooks
         }
     }
 }
+
 
 
 
