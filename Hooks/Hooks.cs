@@ -180,6 +180,8 @@ namespace SwagProject.Hooks
     }
 }
 */
+
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -200,7 +202,7 @@ namespace SwagProject.Hooks
         private readonly ScenarioContext _scenarioContext;
         private static ExtentReports? _extentReports;
         private static ExtentTest? _test;
-        private static string reportPath = string.Empty; // Prevents null warnings
+        private static string reportPath = string.Empty; // Prevents null error
         private List<string> screenshotPaths = new List<string>();
 
         public Hooks(ScenarioContext scenarioContext)
@@ -248,13 +250,11 @@ namespace SwagProject.Hooks
 
             if (_scenarioContext.TestError != null)
             {
-                string? screenshotPath = CaptureScreenshotFile();
+                string screenshotPath = CaptureScreenshotFile();
                 if (!string.IsNullOrEmpty(screenshotPath))
                 {
-                    string relativeScreenshotPath = "Screenshots/" + Path.GetFileName(screenshotPath);
                     _test.Log(Status.Fail, stepText)
-                         .AddScreenCaptureFromPath(relativeScreenshotPath);
-                    screenshotPaths.Add(screenshotPath);
+                         .AddScreenCaptureFromPath(screenshotPath);
                 }
                 else
                 {
@@ -268,14 +268,14 @@ namespace SwagProject.Hooks
             }
         }
 
-        private string? CaptureScreenshotFile()
+        private string CaptureScreenshotFile()
         {
             try
             {
                 if (driver == null || driver.WindowHandles.Count == 0)
                 {
                     Console.WriteLine("No active browser window. Skipping screenshot.");
-                    return null;
+                    return string.Empty;
                 }
 
                 string screenshotDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Screenshots");
@@ -285,7 +285,7 @@ namespace SwagProject.Hooks
                 string screenshotPath = Path.Combine(screenshotDirectory, screenshotFileName);
 
                 Screenshot screenshot = ((ITakesScreenshot)driver).GetScreenshot();
-                screenshot.SaveAsFile(screenshotPath, OpenQA.Selenium.ScreenshotImageFormat.Png); // FIXED
+                screenshot.SaveAsFile(screenshotPath, OpenQA.Selenium.ScreenshotImageFormat.Png);
 
                 screenshotPaths.Add(screenshotPath);
                 return screenshotPath;
@@ -293,7 +293,7 @@ namespace SwagProject.Hooks
             catch (Exception ex)
             {
                 Console.WriteLine($"Failed to capture screenshot: {ex.Message}");
-                return null;
+                return string.Empty;
             }
         }
 
@@ -363,7 +363,6 @@ namespace SwagProject.Hooks
         }
     }
 }
-
 
 
 
