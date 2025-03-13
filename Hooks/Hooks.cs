@@ -202,7 +202,7 @@ namespace SwagProject.Hooks
         private static ExtentReports? _extentReports;
         private static ExtentTest? _test;
         private static string reportPath;
-        public List<string> screenshotPaths = new List<string>();
+        private List<string> screenshotPaths = new List<string>();
 
         public Hooks(ScenarioContext scenarioContext)
         {
@@ -245,16 +245,17 @@ namespace SwagProject.Hooks
         public void InsertReportingSteps()
         {
             string stepText = _scenarioContext.StepContext.StepInfo.Text;
-
             if (_test == null) return;
 
             if (_scenarioContext.TestError != null)
             {
-                string screenshotBase64 = CaptureScreenshotBase64(); // ✅ Capture Base64 screenshot
-                if (!string.IsNullOrEmpty(screenshotBase64))
+                string screenshotPath = CaptureScreenshotFile();
+                if (!string.IsNullOrEmpty(screenshotPath))
                 {
-                    string imgTag = $"<img src='data:image/png;base64,{screenshotBase64}' width='600px' />";
-                    _test.Log(Status.Fail, stepText + "<br>" + imgTag); // ✅ Embed in Extent Report
+                    string relativeScreenshotPath = "Screenshots/" + Path.GetFileName(screenshotPath); 
+                    _test.Log(Status.Fail, stepText)
+                         .AddScreenCaptureFromPath(relativeScreenshotPath);
+                    screenshotPaths.Add(screenshotPath);
                 }
                 else
                 {
@@ -268,7 +269,7 @@ namespace SwagProject.Hooks
             }
         }
 
-        private string CaptureScreenshotBase64()
+        private string CaptureScreenshotFile()
         {
             try
             {
@@ -278,8 +279,17 @@ namespace SwagProject.Hooks
                     return null;
                 }
 
+                string screenshotDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Screenshots");
+                Directory.CreateDirectory(screenshotDirectory);
+
+                string screenshotFileName = $"{_scenarioContext.ScenarioInfo.Title}_{DateTime.Now:yyyyMMddHHmmss}.png";
+                string screenshotPath = Path.Combine(screenshotDirectory, screenshotFileName);
+
                 Screenshot screenshot = ((ITakesScreenshot)driver).GetScreenshot();
-                return screenshot.AsBase64EncodedString; // ✅ Return Base64 string
+                screenshot.SaveAsFile(screenshotPath, ScreenshotImageFormat.Png);
+
+                screenshotPaths.Add(screenshotPath);
+                return screenshotPath;
             }
             catch (Exception ex)
             {
@@ -320,11 +330,22 @@ namespace SwagProject.Hooks
                 mail.From = new MailAddress(senderEmail);
                 mail.To.Add(receiverEmail);
                 mail.Subject = "Test Execution Report";
-                mail.Body = "Please find the test execution report attached.";
+                mail.Body = "Please find the test execution report and screenshots attached.";
 
                 if (File.Exists(reportPath))
                 {
                     mail.Attachments.Add(new Attachment(reportPath));
+                }
+
+                if (screenshotPaths.Count > 0)
+                {
+                    foreach (var screenshotPath in screenshotPaths)
+                    {
+                        if (File.Exists(screenshotPath))
+                        {
+                            mail.Attachments.Add(new Attachment(screenshotPath));
+                        }
+                    }
                 }
 
                 smtpClient.Credentials = new NetworkCredential(senderEmail, senderPassword);
@@ -333,18 +354,16 @@ namespace SwagProject.Hooks
                 try
                 {
                     smtpClient.Send(mail);
-                    Console.WriteLine("Email sent successfully.");
+                    Console.WriteLine("Email sent successfully with report and screenshots.");
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine($"Failed to send email: {ex.Message}");
-                    Console.WriteLine($"Stack Trace: {ex.StackTrace}");
                 }
             }
         }
     }
 }
-
 
 
 
